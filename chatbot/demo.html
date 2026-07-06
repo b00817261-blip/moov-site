@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MOOV Assistant — widget demo</title>
+  <style>
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f4f6fa; color: #1c2b3a; margin: 0; }
+    main { max-width: 720px; margin: 0 auto; padding: 48px 24px 120px; }
+    h1 { color: #0b2545; }
+    .hint { background: #fff; border-left: 4px solid #f2762e; padding: 16px 20px; border-radius: 8px; margin-top: 24px; line-height: 1.6; }
+    code { background: #eef1f6; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>MOOV Assistant — demo page</h1>
+    <p>This page stands in for moovlogistics.com. The chat widget in the bottom-right corner is the whole integration — one script tag.</p>
+    <div class="hint">
+      <b>Try asking it:</b><br />
+      • “What services do you offer?”<br />
+      • “Do you handle customs clearance?”<br />
+      • “How much does it cost to ship a container?” → it asks for your email instead of quoting a price<br />
+      • “Where is my shipment?”<br />
+      • “Who is MOOV?”
+    </div>
+    <p style="margin-top:24px">Captured leads are stored in <code>localStorage["moov-assistant-leads"]</code> and POSTed to <code>MoovChatbotConfig.leadEndpoint</code> when configured.</p>
+  </main>
+
+  <!-- Optional config — must come before the widget script -->
+  <script>
+    window.MoovChatbotConfig = {
+      // leadEndpoint: "https://your-endpoint.example.com/api/leads",
+    };
+  </script>
+  <script src="moov-assistant.js" defer></script>
+</body>
+</html>
