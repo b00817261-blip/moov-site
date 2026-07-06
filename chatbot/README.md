@@ -59,10 +59,37 @@ Each intent has `keywords` (single words), `phrases` (multi-word matches,
 weighted higher), an `answer`, and optional quick-reply `chips`. Add or edit
 entries there — no other code changes needed.
 
-## Upgrading to a real LLM later
+## Hybrid AI mode (optional)
 
-This widget is rule-based: it only answers what's in its knowledge base,
-which means it can never invent prices or wrong facts. If you later want
-free-form answers, keep this exact UI and swap `matchIntent()` for a call to
-a small backend that queries the Claude API with the site content as
-context. The email-capture flow for pricing can stay identical.
+By default the widget is rule-based: it answers from its built-in knowledge
+base and shows a fallback for anything it doesn't recognize. **Hybrid AI
+mode** sends those unrecognized questions to a real Claude model instead, so
+the bot can handle any phrasing — while pricing questions are still
+intercepted client-side and always go to email capture, never to the AI.
+
+To enable it you deploy the small backend in `ai-backend/cloudflare-worker.js`
+(it keeps your Anthropic API key server-side — never put an API key in the
+widget itself):
+
+1. Get an API key at https://console.anthropic.com (paid per use).
+2. Create a free Cloudflare Worker, paste `ai-backend/cloudflare-worker.js`,
+   and set the variables described at the top of that file
+   (`ANTHROPIC_API_KEY`, `ALLOWED_ORIGINS`).
+3. Point the widget at it:
+
+```html
+<script>
+  window.MoovChatbotConfig = {
+    aiEndpoint: "https://moov-assistant.YOUR-SUBDOMAIN.workers.dev",
+  };
+</script>
+```
+
+If the backend is slow, down, or not configured, the widget silently falls
+back to its normal behavior — the site never breaks.
+
+**Cost:** the worker defaults to Claude Opus 4.8 (about $0.01–0.03 per
+AI-answered question at typical lengths). Set the `CLAUDE_MODEL` variable to
+`claude-haiku-4-5` for roughly 5× cheaper answers if volume grows. Only
+unrecognized questions reach the AI — common questions are answered free by
+the built-in knowledge base.

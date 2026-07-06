@@ -27,6 +27,12 @@
   var cfg = Object.assign(
     {
       leadEndpoint: null,
+      // Optional hybrid AI mode: URL of a backend that answers free-form
+      // questions with a real LLM (see chatbot/ai-backend/). When set,
+      // questions the built-in knowledge base doesn't recognize are sent
+      // there instead of showing the generic fallback. Pricing questions
+      // are still intercepted client-side and never reach the AI.
+      aiEndpoint: null,
       primaryColor: "#0b2545",
       accentColor: "#f2762e",
       botName: "MOOV Assistant",
@@ -58,7 +64,7 @@
     {
       id: "services",
       keywords: ["services", "service", "offer", "offers", "solutions", "capabilities", "provide", "help"],
-      phrases: ["what do you do", "what can you do", "what does moov do", "what moov does", "help me with", "list of services", "tell me about your services", "what do you offer", "can you help"],
+      phrases: ["what do you do", "what can you do", "what does moov do", "what moov does", "list of services", "tell me about your services", "what do you offer"],
       answer: function () {
         return (
           "MOOV covers the full scope of supply chain services:<br><br>" +
@@ -72,6 +78,18 @@
         );
       },
       chips: ["Ocean freight", "Air freight", "Warehousing", "smartMOOV 4PL"],
+    },
+    {
+      id: "freight_forwarding",
+      keywords: ["forwarding", "forwarder", "forwarders"],
+      phrases: ["freight forwarding", "freight forwarder", "what is freight", "whats freight", "forward my freight"],
+      answer: function () {
+        return (
+          "<b>Freight forwarding</b> is the organizing of cargo shipments on behalf of a business: a freight forwarder like MOOV books the space with carriers, prepares the documents, handles customs and tracks the shipment — so you don't have to deal with each carrier and border yourself.<br><br>" +
+          "MOOV forwards freight by <b>ocean, air and rail</b>, with customs clearance and cargo insurance included as needed. Which mode are you interested in?"
+        );
+      },
+      chips: ["Ocean freight", "Air freight", "Rail freight", "Get a quote"],
     },
     {
       id: "ocean",
@@ -148,8 +166,8 @@
     },
     {
       id: "fourpl",
-      keywords: ["4pl", "smartmoov", "outsource", "outsourcing", "orchestration"],
-      phrases: ["supply chain management", "control tower", "manage my supply chain", "4pl program"],
+      keywords: ["4pl", "3pl", "smartmoov", "outsource", "outsourcing", "orchestration"],
+      phrases: ["supply chain management", "control tower", "manage my supply chain", "4pl program", "what is 4pl", "what is a 4pl", "what does 4pl mean"],
       answer: function () {
         return (
           "<b>smartMOOV</b> is our 4PL program: MOOV becomes the single point of contact that plans, executes and optimizes your entire supply chain — orders, bookings, carriers, warehousing and customs — through one digital control tower.<br><br>" +
@@ -208,8 +226,8 @@
     },
     {
       id: "about",
-      keywords: ["about", "company", "history", "founded", "klg", "old", "background", "story"],
-      phrases: ["who are you", "who is moov", "about moov", "your company", "how long have"],
+      keywords: ["company", "history", "founded", "klg", "background", "story"],
+      phrases: ["who are you", "who is moov", "about moov", "about your company", "about the company", "your company", "how long have", "how old is"],
       answer: function () {
         return (
           "MOOV is Asia's smart logistics and supply chain management company. We trace our roots to <b>KLG Europe</b>, a European logistics holding with over 100 years of history (since 1918). MOOV itself started in <b>2013</b> as an innovative company continuing that legacy — combining a century of logistics experience with modern digital solutions.<br><br>" +
@@ -248,7 +266,7 @@
     {
       id: "pricing",
       keywords: ["price", "prices", "pricing", "cost", "costs", "rate", "rates", "quote", "quotation", "fee", "fees", "charge", "charges", "tariff", "budget", "cheap", "cheaper", "expensive", "discount"],
-      phrases: ["how much", "get a quote", "price list", "what does it cost", "what would it cost", "ballpark", "shipping cost", "cost of shipping", "cost to ship", "quote for", "quote me", "need a quote", "request a quote", "an estimate"],
+      phrases: ["how much", "get a quote", "price list", "what does it cost", "what would it cost", "ballpark", "shipping cost", "cost of shipping", "the cost", "cost to", "cost for", "cost of", "the price", "a price", "price to", "price for", "price of", "rate for", "rates for", "quote for", "quote me", "need a quote", "request a quote", "an estimate"],
       weight: 2, // pricing wins ties — it's the money question
       answer: function () {
         return (
@@ -421,12 +439,20 @@
       (intent.keywords || []).forEach(function (k) {
         if (tokens[k] || tokens[k + "s"]) score += 1 * w;
       });
-      if (score > bestScore) {
+      // Pricing wins ties: never quote a canned service answer when the
+      // visitor is asking about money.
+      if (score > bestScore || (score === bestScore && score > 0 && intent.id === "pricing")) {
         bestScore = score;
         best = intent;
       }
     });
-    return bestScore > 0 ? best : null;
+    if (!best) return null;
+    // With an AI backend available, only trust weak matches (one keyword,
+    // no phrase) on short messages — a lone keyword buried in a long
+    // sentence is better answered by the AI than by a canned reply.
+    var wordCount = lower.trim().split(" ").length;
+    if (cfg.aiEndpoint && bestScore < 2 && wordCount > 4) return null;
+    return best;
   }
 
   /* ------------------------------------------------------------------ */
@@ -511,7 +537,13 @@
     pendingQuestion: null,
     emailNudges: 0,
     started: false,
+    history: [], // last few turns, sent to the AI backend for context
   };
+
+  function remember(role, text) {
+    state.history.push({ role: role, content: text });
+    if (state.history.length > 8) state.history.shift();
+  }
 
   var els = {};
 
@@ -690,17 +722,77 @@
     }
 
     // 3. Normal Q&A.
+    remember("user", text);
     var intent = matchIntent(text);
     if (intent) {
       respondWithIntent(intent, text);
+    } else if (cfg.aiEndpoint) {
+      askAI(text);
     } else {
       botSay(fallbackAnswer(), FALLBACK_CHIPS);
     }
   }
 
   function respondWithIntent(intent, originalText) {
-    botSay(intent.answer(), intent.chips);
+    var html = intent.answer();
+    remember("assistant", html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim());
+    botSay(html, intent.chips);
     if (intent.captureEmail) enterEmailMode(originalText);
+  }
+
+  // Hybrid AI mode: unknown questions go to a real LLM backend.
+  function askAI(question) {
+    var typing = document.createElement("div");
+    typing.className = "moov-typing";
+    typing.innerHTML = "<span></span><span></span><span></span>";
+    els.messages.appendChild(typing);
+    scrollDown();
+
+    var finish = function (html, chips) {
+      typing.remove();
+      addMsg(html, "bot");
+      addChips(chips);
+    };
+
+    var timeout = setTimeout(function () {
+      controllerDone = true;
+      finish(fallbackAnswer(), FALLBACK_CHIPS);
+    }, 20000);
+    var controllerDone = false;
+
+    fetch(cfg.aiEndpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        question: question,
+        history: state.history.slice(0, -1), // context before this question
+        page: location.href,
+      }),
+    })
+      .then(function (r) {
+        if (!r.ok) throw new Error("ai backend " + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        if (controllerDone) return;
+        clearTimeout(timeout);
+        var answer = data && typeof data.answer === "string" ? data.answer.trim() : "";
+        if (!answer) throw new Error("empty answer");
+        remember("assistant", answer);
+        finish(renderAiText(answer), []);
+      })
+      .catch(function () {
+        if (controllerDone) return;
+        clearTimeout(timeout);
+        finish(fallbackAnswer(), FALLBACK_CHIPS);
+      });
+  }
+
+  // AI answers arrive as plain text — escape, then allow **bold** and newlines.
+  function renderAiText(text) {
+    return escapeHtml(text)
+      .replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
+      .replace(/\n/g, "<br>");
   }
 
   function escapeHtml(s) {
