@@ -138,16 +138,16 @@ MOOV.slotTimes = [
 MOOV.schedule = {
   strategic: {
     entries: {
-      "2026-07-06|09:30": { state: "booked", with: "Bolt Home & Living", type: "Intro call — 4PL" },
-      "2026-07-08|14:30": { state: "booked", with: "Rossmann Import", type: "Programme review" },
+      "2026-07-06|09:30": { state: "booked", with: "Bolt Home & Living", contact: "Jonas Meyer", attendees: ["j.meyer@bolt-living.example", "s.krug@bolt-living.example"], teams: true, type: "Intro call — 4PL" },
+      "2026-07-08|14:30": { state: "booked", with: "Rossmann Import", contact: "Petra Held", attendees: ["p.held@rossmann-import.example"], teams: true, type: "Programme review" },
       "2026-07-07|11:30": { state: "blocked", reason: "Team stand-up" },
       "2026-07-09|13:30": { state: "blocked", reason: "Flight to Lyon" },
     },
   },
   freight: {
     entries: {
-      "2026-07-06|13:30": { state: "booked", with: "Tedi GmbH", type: "Intro call — ocean" },
-      "2026-07-07|10:30": { state: "booked", with: "Pepco Group", type: "Quote review" },
+      "2026-07-06|13:30": { state: "booked", with: "Tedi GmbH", contact: "Murat Aydin", attendees: ["m.aydin@tedi.example"], teams: true, type: "Intro call — ocean" },
+      "2026-07-07|10:30": { state: "booked", with: "Pepco Group", contact: "Ola Nowak", attendees: ["o.nowak@pepco.example", "k.zielinski@pepco.example", "m.kowal@pepco.example"], teams: true, type: "Quote review" },
       "2026-07-09|09:30": { state: "blocked", reason: "Port visit — Ningbo" },
     },
   },

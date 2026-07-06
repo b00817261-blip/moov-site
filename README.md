@@ -97,12 +97,17 @@ A "Demo: switch view" link in each sidebar jumps between the two.
   and are removed from the public picker (titles are never shown to
   prospects). Sync now / disconnect / reconnect all work in-demo. Bookable
   slots = working hours − Outlook busy − manual blocks.
-- **Teams-native bookings** — the public flow collects the prospect's work
-  email, and the confirmation shows a Teams meeting link, notes the invite
-  went to both calendars, and offers a **real downloadable .ics invite**
-  (correct UTC times). In production this is the Microsoft Graph API:
-  read free/busy, create the Outlook event with a Teams link, email invites
-  to both parties.
+- **Teams-native bookings** — the public flow collects the prospect's name
+  and work email, and the confirmation shows a Teams meeting link, notes the
+  invite went to both calendars, and offers a **real downloadable .ics
+  invite** (correct UTC times, ORGANIZER + ATTENDEE lines for everyone).
+  In production this is the Microsoft Graph API: read free/busy, create the
+  Outlook event with a Teams link, email invites to both parties.
+- **Participants ("Who's on the call")** — the confirmation lists the MOOV
+  host, the organiser, and lets the prospect add up to 4 colleagues to the
+  invite (add/remove with live toasts). Attendees flow through to the .ics
+  file and to the expert's calendar cell, which shows the contact and
+  headcount (e.g. "Ola Nowak +2").
 
 ## Project structure
 

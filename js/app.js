@@ -20,7 +20,7 @@
 
   /* ---- ephemeral booking state -------------------------------------- */
   MOOV.booking = MOOV.booking || {
-    step: 1, company: "", email: "", ship: "", origin: "", dest: "", volume: "",
+    step: 1, company: "", name: "", email: "", guests: [], ship: "", origin: "", dest: "", volume: "",
     incoterm: "", interests: [], day: null, slot: null,
   };
   const emailOk = (v) => /\S+@\S+\.\S+/.test(v || "");
@@ -105,17 +105,21 @@
       <h2>Tell us what you ship</h2>
       <p class="sub">Six quick fields. This helps us bring the right expert to your call.</p>
 
+      <div class="field">
+        <label>Company name <span class="req">*</span></label>
+        <input class="input" id="f-company" placeholder="e.g. Lidl Trading" value="${b.company||''}">
+      </div>
       <div class="field-row">
         <div class="field">
-          <label>Company name <span class="req">*</span></label>
-          <input class="input" id="f-company" placeholder="e.g. Lidl Trading" value="${b.company||''}">
+          <label>Your name <span class="req">*</span></label>
+          <input class="input" id="f-name" placeholder="e.g. Anna Weber" value="${b.name||''}">
         </div>
         <div class="field">
           <label>Work email <span class="req">*</span></label>
           <input class="input" id="f-email" type="email" placeholder="you@company.com" value="${b.email||''}">
         </div>
       </div>
-      <p class="muted" style="font-size:12.5px;margin-top:8px">${I('calendar','i-sm')} We'll send the calendar invite and Microsoft Teams link here.</p>
+      <p class="muted" style="font-size:12.5px;margin-top:8px">${I('calendar','i-sm')} We'll send the calendar invite and Microsoft Teams link here — you can add colleagues after booking.</p>
 
       <div class="field">
         <label>What do you ship?</label>
@@ -153,7 +157,7 @@
 
       <div class="card-actions">
         <a class="btn btn-ghost" href="#/">Cancel</a>
-        <button class="btn btn-primary" id="to-step2" ${b.company && emailOk(b.email)?'':'disabled'}>Choose a time ${I('arrow','i-sm')}</button>
+        <button class="btn btn-primary" id="to-step2" ${b.company && b.name && emailOk(b.email)?'':'disabled'}>Choose a time ${I('arrow','i-sm')}</button>
       </div>
     `;
   }
@@ -212,12 +216,16 @@
 
   /* A real, downloadable calendar invite (.ics) for the prospect.
      July = CEST (UTC+2), so a 10:30 CET slot is 08:30 UTC. */
-  function bookingIcs(b, exp, day, slot) {
+  function bookingIcs(b, exp, day, slot, team) {
     const [h, m] = slot.cet.split(":").map(Number);
     const pad = (n) => String(n).padStart(2, "0");
     const dayNum = day.iso.replace(/-/g, "");
     const startH = h - 2;
     const endMin = m + 30, endH = startH + Math.floor(endMin / 60);
+    const expEmail = (MOOV.calendars[team] || {}).account || "meet@moov-logistics.com";
+    const attendees = [
+      "ATTENDEE;CN=" + (b.name || "Prospect") + ";ROLE=REQ-PARTICIPANT;RSVP=TRUE:mailto:" + (b.email || "prospect@example.com"),
+    ].concat(b.guests.map((g) => "ATTENDEE;CN=" + g.split("@")[0] + ";ROLE=REQ-PARTICIPANT;RSVP=TRUE:mailto:" + g));
     const ics = [
       "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//MOOV Logistics//Booking//EN",
       "BEGIN:VEVENT",
@@ -226,12 +234,15 @@
       "DTSTART:" + dayNum + "T" + pad(startH) + pad(m) + "00Z",
       "DTEND:" + dayNum + "T" + pad(endH) + pad(endMin % 60) + "00Z",
       "SUMMARY:MOOV intro call — " + (b.company || "Prospect") + " × " + exp.name,
+      "ORGANIZER;CN=" + exp.name + ":mailto:" + expEmail,
+    ].concat(attendees).concat([
       "DESCRIPTION:30-minute video call with " + exp.name + " (" + exp.team + ")\\nMicrosoft Teams — join link in your email invite.",
       "LOCATION:Microsoft Teams",
       "END:VEVENT", "END:VCALENDAR",
-    ].join("\r\n");
+    ]).join("\r\n");
     return "data:text/calendar;charset=utf-8," + encodeURIComponent(ics);
   }
+  const initialsOf = (s) => (s || "?").trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 
   /* -- step 3: confirmation ------------------------------------------- */
   function bookStep3() {
@@ -256,7 +267,33 @@
           <div class="muted" style="font-size:13px;margin-top:2px">Invite sent to <b>${b.email || 'your inbox'}</b> and added to ${exp.name}'s Outlook calendar.</div>
           <a href="#" class="link tb-join" style="font-size:13px;display:inline-block;margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">teams.microsoft.com/l/meetup-join/moov-${day.iso}-${slot.cet.replace(':','')}…</a>
         </div>
-        <a class="btn btn-ghost btn-sm" style="flex:none" href="${bookingIcs(b, exp, day, slot)}" download="moov-intro-call.ics">${I('calendar','i-sm')} Add to calendar</a>
+        <a class="btn btn-ghost btn-sm" style="flex:none" href="${bookingIcs(b, exp, day, slot, team)}" download="moov-intro-call.ics">${I('calendar','i-sm')} Add to calendar</a>
+      </div>
+
+      <div class="att-card">
+        <h3 style="font-size:16px">Who's on the call</h3>
+        <div class="att-row">
+          <div class="att-av ${team}">${exp.initials}</div>
+          <div style="flex:1"><b>${exp.name}</b><div class="muted" style="font-size:12.5px">${exp.role}</div></div>
+          <span class="chip">MOOV host</span>
+        </div>
+        <div class="att-row">
+          <div class="att-av you">${initialsOf(b.name)}</div>
+          <div style="flex:1"><b>${b.name || 'You'}</b><div class="muted" style="font-size:12.5px">${b.email || ''}</div></div>
+          <span class="chip">Organiser</span>
+        </div>
+        ${b.guests.map((g, i) => `
+        <div class="att-row">
+          <div class="att-av guest">${initialsOf(g.split('@')[0].replace(/[._-]/g,' '))}</div>
+          <div style="flex:1"><b>${g}</b><div class="muted" style="font-size:12.5px">Invite sent</div></div>
+          <button class="btn btn-ghost btn-sm guest-rm" data-i="${i}" title="Remove from invite">Remove</button>
+        </div>`).join("")}
+        ${b.guests.length < 4 ? `
+        <div class="att-add">
+          <input class="input" id="guest-email" type="email" placeholder="Add a colleague — colleague@${(b.email.split('@')[1]) || 'company.com'}">
+          <button class="btn btn-primary btn-sm" id="guest-add">${I('users','i-sm')} Add to invite</button>
+        </div>` : `<p class="muted" style="font-size:12.5px;margin-top:10px">Maximum 5 participants from your side — need more? Mention it in the call notes.</p>`}
+        <p class="muted" style="font-size:12.5px;margin-top:12px">${I('info','i-sm')} Everyone listed gets the Teams invite and the calendar file, and appears in ${exp.name.split(' ')[0]}'s calendar.</p>
       </div>
 
       <div class="expert-card ${team}">
@@ -291,8 +328,10 @@
     const b = MOOV.booking;
     if (b.step === 1) {
       const company = el("f-company");
-      const refreshNext = () => { const btn = el("to-step2"); if (btn) btn.disabled = !(el("f-company").value.trim() && emailOk(el("f-email").value)); };
+      const refreshNext = () => { const btn = el("to-step2"); if (btn) btn.disabled = !(el("f-company").value.trim() && el("f-name").value.trim() && emailOk(el("f-email").value)); };
       company && company.addEventListener("input", (e) => { b.company = e.target.value; refreshNext(); });
+      const name = el("f-name");
+      name && name.addEventListener("input", (e) => { b.name = e.target.value; refreshNext(); });
       const email = el("f-email");
       email && email.addEventListener("input", (e) => { b.email = e.target.value; refreshNext(); });
       const bindText = (id, key) => { const n = el(id); n && n.addEventListener("input", (e) => (b[key] = e.target.value)); };
@@ -325,13 +364,34 @@
       el("back-step1") && el("back-step1").addEventListener("click", () => { b.step = 1; render(); });
       el("to-step3") && el("to-step3").addEventListener("click", () => {
         // the confirmed slot lands in the assigned expert's Outlook calendar
-        MOOV.schedule[bookingTeam()].entries[b.day + "|" + b.slot] =
-          { state: "booked", with: b.company || "New prospect", type: "Intro call", teams: true, isNew: true };
+        MOOV.schedule[bookingTeam()].entries[b.day + "|" + b.slot] = {
+          state: "booked", with: b.company || "New prospect", contact: b.name || "",
+          attendees: [b.email].concat(b.guests), type: "Intro call", teams: true, isNew: true,
+        };
         b.step = 3; render();
       });
     } else if (b.step === 3) {
       const join = $(".tb-join");
       join && join.addEventListener("click", (e) => { e.preventDefault(); toast("Prototype — the Teams meeting would open here"); });
+      const entry = MOOV.schedule[bookingTeam()].entries[b.day + "|" + b.slot];
+      const syncAttendees = () => { if (entry) entry.attendees = [b.email].concat(b.guests); };
+      const addGuest = () => {
+        const input = el("guest-email");
+        const v = (input.value || "").trim();
+        if (!emailOk(v)) { toast("Enter a valid work email"); return; }
+        if (v === b.email || b.guests.includes(v)) { toast("Already on the invite"); return; }
+        b.guests.push(v); syncAttendees(); render();
+        toast("Invite sent to " + v);
+      };
+      const add = el("guest-add");
+      add && add.addEventListener("click", addGuest);
+      const gInput = el("guest-email");
+      gInput && gInput.addEventListener("keydown", (e) => { if (e.key === "Enter") addGuest(); });
+      $$(".guest-rm").forEach((btn) => btn.addEventListener("click", () => {
+        const removed = b.guests.splice(Number(btn.dataset.i), 1)[0];
+        syncAttendees(); render();
+        toast("Removed " + removed + " — cancellation sent");
+      }));
     }
   }
   function bindSlots() {
@@ -1186,8 +1246,11 @@
         const key = d.iso + "|" + t.cet;
         const e = MOOV.slotState(expKey, d.iso, t.cet);
         if (e.state === "booked") {
-          return `<button class="sched-cell booked ${e.isNew?'isnew':''}" data-key="${key}" title="Booked calls can't be blocked here">
-            ${I('lock','i-sm')} <div class="sc-t">${e.with}</div><div class="sc-s">${e.type}${e.teams?' · Teams':''}${e.isNew?' · just booked':''}</div>
+          const n = (e.attendees || []).length;
+          const who = e.contact ? e.contact + (n > 1 ? " +" + (n - 1) : "") : e.type;
+          const tip = `${e.type} with ${e.contact || e.with}${n > 1 ? ` and ${n - 1} colleague${n > 2 ? 's' : ''}` : ''}${e.teams ? ' · Microsoft Teams' : ''}`;
+          return `<button class="sched-cell booked ${e.isNew?'isnew':''}" data-key="${key}" title="${tip}">
+            ${I('lock','i-sm')} <div class="sc-t">${e.with}</div><div class="sc-s">${who}${e.teams?' · Teams':''}${e.isNew?' · just booked':''}</div>
           </button>`;
         }
         if (e.state === "blocked") {
