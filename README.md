@@ -35,8 +35,15 @@ python3 -m http.server 8099
   **Strategic team** (Élodie Chen); simple freight quotes route to the
   **Freight desk** (Hao Lin). The routing updates live as you pick services.
 
-### 2. Client dashboard (logged-in side)
-Demo account: **Lidl Trading** (`#/login` → click *Sign in*).
+### 2. One login, two roles
+The login screen (`#/login`) offers two demo sign-ins that render different
+portals from the same entry point:
+- **Sign in as Client — Lidl Trading** → the client portal, scoped to that account
+- **Sign in as MOOV Ops** → the internal operations console, spanning all clients
+
+A "Demo: switch view" link in each sidebar jumps between the two.
+
+### 3. Client portal (Lidl Trading)
 - **Overview** (`#/app`) — active shipments, containers at sea, open alerts,
   monthly spend (with a 6-month chart), recent shipments and an alerts feed.
 - **Shipment list** (`#/app/shipments`) — 8 shipments with container numbers
@@ -46,8 +53,35 @@ Demo account: **Lidl Trading** (`#/login` → click *Sign in*).
 - **Shipment detail** (`#/app/shipments/:id`) — a horizontal progress tracker
   with the stages **Booking confirmed → Picked up → In warehouse → Departed
   port → At sea → Arrived port → Customs clearance → Delivered**, plus an
-  exception banner (e.g. customs hold), full shipment facts and a milestone
-  timeline.
+  exception banner, full shipment facts, per-shipment documents and a
+  milestone timeline.
+- **Act on exceptions** — the customs-hold shipment shows a *"Required from
+  you"* checklist with drag-and-drop upload; uploading flips the documents to
+  *Under review*, updates the banner, timeline and alert feed.
+- **Bookings** (`#/app/bookings`) — request quotes/new shipments in-app; the
+  form adds a live *Pending review* row.
+- **Documents** (`#/app/documents`) — every B/L, invoice, packing list and
+  customs doc across shipments, with status (available / under review /
+  required from you) and download/upload actions.
+- **Invoices** (`#/app/invoices`) — open balance, overdue and paid; July's
+  three invoices reconcile exactly to the €249k spend KPI.
+- **Messages** (`#/app/messages`) — a per-shipment thread (chat UI) so
+  questions stay attached to the container; sending works in-demo.
+- Working chrome: notification bell (opens an alert panel), global topbar
+  search (jumps to shipments), clickable KPI cards (deep-link to filtered
+  views), clickable breadcrumbs, and a **live lane view** (China → EU SVG,
+  each dot a shipment positioned by milestone progress).
+
+### 4. MOOV Ops console (internal side)
+- **Action queue** (`#/ops`) — cross-client exceptions and tasks, prioritised,
+  each linking to the shipment; KPIs across all accounts.
+- **All shipments** (`#/ops/shipments`) — every client's shipments with a
+  client column and client switcher.
+- **Clients** (`#/ops/clients`) — account cards with live workload
+  (active shipments, exceptions, monthly spend).
+- **Ops actions on a shipment** — advance the milestone or resolve a customs
+  hold; changes appear immediately in the client's view (shared data layer —
+  exactly the "control tower produces what clients consume" model).
 
 ## Project structure
 
@@ -62,4 +96,14 @@ js/app.js         # hash router + all views + interactions
 ## Notes
 - The design uses the Inter web font when available and falls back to the system
   font stack offline.
-- State (booking answers, filters) lives in memory — refreshing resets the demo.
+- State (booking answers, uploads, messages, filters) lives in memory —
+  refreshing resets the demo.
+
+## Security caveat (for the real build)
+This prototype has **no real authentication or authorization** — the role
+buttons simply render different views over shared fictional data. Before
+going live, anything touching real accounts needs proper access control:
+per-tenant data isolation (a client must never see another client's
+shipments), role-based permissions, audit logging for ops actions, and a
+security review around documents and invoice/payment data. Deliberately out
+of scope here; flag for the engineering team.

@@ -381,3 +381,159 @@ MOOV.spendTrend = [
   { m: "Jun", v: 242 },
   { m: "Jul", v: 249 },
 ];
+
+/* =====================================================================
+   ROLES & SESSION (prototype only — no real auth; see README security note)
+   ===================================================================== */
+MOOV.session = { role: null };
+
+/* All client accounts (ops side sees every one; client side sees itself) */
+MOOV.clientsAll = [
+  { id: "LDL-4471", name: "Lidl Trading", country: "Germany", contact: "Katrin Vogel", manager: "Élodie Chen", spendMonthK: 249, since: 2018 },
+  { id: "ACT-2210", name: "Action Retail B.V.", country: "Netherlands", contact: "Pieter de Wit", manager: "Hao Lin", spendMonthK: 118, since: 2021 },
+  { id: "WLW-1130", name: "Woolworth GmbH", country: "Germany", contact: "Sabine Kraus", manager: "Hao Lin", spendMonthK: 76, since: 2023 },
+];
+
+/* tag existing (Lidl) shipments with their account */
+MOOV.shipments.forEach((s) => (s.client = "LDL-4471"));
+
+/* other clients' shipments — visible on the ops side only ------------- */
+MOOV.otherShipments = [
+  {
+    id: "CSNU-4419023", ref: "PO-ACT-55102", client: "ACT-2210",
+    origin: "Ningbo", originPort: "CNNGB", dest: "Rotterdam", destPort: "NLRTM",
+    incoterm: "DAP", mode: "Ocean · FCL", carrier: "MSC", vessel: "MSC Sixin",
+    commodity: "Household goods", containers: 3, teu: 6, weightT: 41.5, valueEur: 102000,
+    etd: "2026-06-21", eta: "2026-07-23", stage: 4, flags: {},
+    events: [
+      { stage: 0, ts: "2026-06-06 09:30", place: "Ningbo", note: "Booking confirmed with MSC." },
+      { stage: 3, ts: "2026-06-21 21:10", place: "Ningbo (CNNGB)", note: "Departed origin port." },
+      { stage: 4, ts: "2026-06-22 05:00", place: "East China Sea", note: "In transit." },
+    ],
+  },
+  {
+    id: "MSKU-2210457", ref: "PO-ACT-55140", client: "ACT-2210",
+    origin: "Shenzhen", originPort: "CNSZX", dest: "Rotterdam", destPort: "NLRTM",
+    incoterm: "FOB", mode: "Ocean · FCL", carrier: "Maersk", vessel: "Maersk Salina",
+    commodity: "Party supplies", containers: 1, teu: 2, weightT: 11.2, valueEur: 54200,
+    etd: "2026-05-26", eta: "2026-06-30", stage: 6,
+    flags: { exception: true, exceptionLabel: "Docs required", note: "Certificate of origin missing — broker cannot lodge the import declaration." },
+    events: [
+      { stage: 0, ts: "2026-05-10 14:00", place: "Shenzhen", note: "Booking confirmed." },
+      { stage: 5, ts: "2026-06-29 08:45", place: "Rotterdam (NLRTM)", note: "Arrived, discharged." },
+      { stage: 6, ts: "2026-06-30 10:20", place: "Rotterdam customs", note: "Blocked — certificate of origin missing." },
+    ],
+  },
+  {
+    id: "HLXU-7801122", ref: "PO-WLW-33018", client: "WLW-1130",
+    origin: "Shanghai", originPort: "CNSHA", dest: "Hamburg", destPort: "DEHAM",
+    incoterm: "CIF", mode: "Ocean · FCL", carrier: "Hapag-Lloyd", vessel: "Al Zubara",
+    commodity: "Stationery & crafts", containers: 2, teu: 4, weightT: 24.0, valueEur: 66800,
+    etd: "2026-07-12", eta: "2026-08-14", stage: 2, flags: {},
+    events: [
+      { stage: 0, ts: "2026-06-26 10:15", place: "Shanghai", note: "Booking confirmed." },
+      { stage: 2, ts: "2026-07-04 16:40", place: "Shanghai CFS", note: "In warehouse, awaiting stuffing." },
+    ],
+  },
+  {
+    id: "TGHU-5583901", ref: "PO-WLW-33002", client: "WLW-1130",
+    origin: "Ningbo", originPort: "CNNGB", dest: "Hamburg", destPort: "DEHAM",
+    incoterm: "DDP", mode: "Ocean · FCL", carrier: "COSCO", vessel: "COSCO Shipping Aries",
+    commodity: "Kitchen textiles", containers: 2, teu: 4, weightT: 18.6, valueEur: 47900,
+    etd: "2026-05-29", eta: "2026-07-03", stage: 5, flags: {},
+    events: [
+      { stage: 0, ts: "2026-05-14 11:00", place: "Ningbo", note: "Booking confirmed." },
+      { stage: 5, ts: "2026-07-03 07:30", place: "Hamburg (DEHAM)", note: "Vessel arrived, awaiting discharge." },
+    ],
+  },
+];
+MOOV.allShipments = MOOV.shipments.concat(MOOV.otherShipments);
+MOOV.clientName = (id) => (MOOV.clientsAll.find((c) => c.id === id) || {}).name || id;
+
+/* =====================================================================
+   DOCUMENTS (Lidl scope for the client demo)
+   status: available | required | review
+   ===================================================================== */
+MOOV.documents = [
+  { id: "D-101", ship: "MSKU-7781234", type: "Bill of lading", name: "MBL-MAEU-224781.pdf", date: "2026-06-19", size: "214 KB", status: "available" },
+  { id: "D-102", ship: "MSKU-7781234", type: "Commercial invoice", name: "CI-88213.pdf", date: "2026-06-14", size: "96 KB", status: "available" },
+  { id: "D-103", ship: "MSKU-7781234", type: "Packing list", name: "PL-88213.pdf", date: "2026-06-14", size: "88 KB", status: "available" },
+  { id: "D-110", ship: "MRKU-4432190", type: "Booking confirmation", name: "BC-MSC-88240.pdf", date: "2026-06-24", size: "64 KB", status: "available" },
+  { id: "D-111", ship: "MRKU-4432190", type: "Packing list", name: "PL-88240.pdf", date: "2026-07-01", size: "91 KB", status: "available" },
+  { id: "D-120", ship: "TCLU-9902315", type: "Bill of lading", name: "MBL-CMDU-990231.pdf", date: "2026-05-29", size: "208 KB", status: "available" },
+  { id: "D-121", ship: "TCLU-9902315", type: "Commercial invoice", name: "CI-88101-original.pdf", date: "2026-05-22", size: "94 KB", status: "available" },
+  { id: "D-122", ship: "TCLU-9902315", type: "Packing list", name: "PL-88101.pdf", date: "2026-05-22", size: "85 KB", status: "available" },
+  { id: "D-123", ship: "TCLU-9902315", type: "Import declaration", name: "MRN-26DE4855021.pdf", date: "2026-07-02", size: "132 KB", status: "review" },
+  { id: "D-124", ship: "TCLU-9902315", type: "Commercial invoice (revised)", name: "—", date: "", size: "", status: "required", hint: "Must match the declared value of €178,300." },
+  { id: "D-125", ship: "TCLU-9902315", type: "Proof of payment", name: "—", date: "", size: "", status: "required", hint: "Bank transfer confirmation for this consignment." },
+  { id: "D-130", ship: "MSCU-3320145", type: "Bill of lading", name: "MBL-MEDU-332014.pdf", date: "2026-05-01", size: "211 KB", status: "available" },
+  { id: "D-131", ship: "MSCU-3320145", type: "Customs clearance", name: "ATB-26DE1140233.pdf", date: "2026-06-03", size: "77 KB", status: "available" },
+  { id: "D-132", ship: "MSCU-3320145", type: "Proof of delivery", name: "POD-87990.pdf", date: "2026-06-05", size: "58 KB", status: "available" },
+  { id: "D-140", ship: "HLXU-5567781", type: "Bill of lading", name: "MBL-HLCU-556778.pdf", date: "2026-07-03", size: "205 KB", status: "available" },
+  { id: "D-141", ship: "HLXU-5567781", type: "Commercial invoice", name: "CI-88266.pdf", date: "2026-06-28", size: "97 KB", status: "available" },
+  { id: "D-150", ship: "OOLU-8811223", type: "Booking confirmation", name: "BC-OOCL-88301.pdf", date: "2026-07-04", size: "66 KB", status: "available" },
+  { id: "D-160", ship: "CMAU-6675490", type: "Bill of lading", name: "MBL-CMDU-667549.pdf", date: "2026-05-31", size: "216 KB", status: "available" },
+  { id: "D-161", ship: "CMAU-6675490", type: "Arrival notice", name: "AN-DEHAM-88055.pdf", date: "2026-07-03", size: "71 KB", status: "available" },
+];
+MOOV.docsFor = (shipId) => MOOV.documents.filter((d) => d.ship === shipId);
+
+/* =====================================================================
+   INVOICES (Lidl) — July invoices reconcile to the €249k spend KPI
+   ===================================================================== */
+MOOV.invoices = [
+  { id: "INV-2026-0704", issued: "2026-07-04", due: "2026-07-28", amountEur: 96300, desc: "Ocean freight — June sailings", ships: ["MSKU-7781234", "HLXU-5567781"], status: "due" },
+  { id: "INV-2026-0702", issued: "2026-07-02", due: "2026-07-26", amountEur: 84150, desc: "Freight & customs clearance", ships: ["CMAU-6675490", "TCLU-9902315"], status: "due" },
+  { id: "INV-2026-0701", issued: "2026-07-01", due: "2026-07-25", amountEur: 68550, desc: "Warehousing & drayage — June programme", ships: ["MRKU-4432190"], status: "due" },
+  { id: "INV-2026-0615", issued: "2026-06-15", due: "2026-06-30", amountEur: 12150, desc: "Demurrage & detention", ships: ["MSCU-3320145"], status: "overdue" },
+  { id: "INV-2026-0610", issued: "2026-06-10", due: "2026-07-05", amountEur: 128700, desc: "Ocean freight — May sailings", ships: ["MSCU-3320145", "TCLU-9902315"], status: "paid" },
+  { id: "INV-2026-0528", issued: "2026-05-28", due: "2026-06-22", amountEur: 113300, desc: "Freight, customs & warehousing", ships: ["CMAU-6675490"], status: "paid" },
+];
+
+/* =====================================================================
+   MESSAGE THREADS (per shipment)
+   ===================================================================== */
+MOOV.threads = [
+  {
+    ship: "MSKU-7781234", unread: 1,
+    messages: [
+      { from: "moov", name: "Élodie Chen", ts: "2026-07-05 16:20", text: "Heads up — berth congestion at Hamburg has pushed your ETA to 19 Jul (+2 days). The inland leg is already rebooked; no action needed on your side." },
+    ],
+  },
+  {
+    ship: "TCLU-9902315", unread: 0,
+    messages: [
+      { from: "moov", name: "Élodie Chen", ts: "2026-07-02 09:40", text: "Hamburg customs has placed the import declaration on hold — they're querying the declared invoice value. Could you upload a revised commercial invoice and proof of payment? Both are listed under your required documents." },
+      { from: "client", name: "Katrin Vogel", ts: "2026-07-02 11:05", text: "On it — finance is pulling the bank confirmation. You'll have the revised invoice by tomorrow." },
+      { from: "moov", name: "Élodie Chen", ts: "2026-07-02 11:12", text: "Perfect. Once both are in, our broker resubmits the same day. No storage charges accrue before 9 Jul." },
+    ],
+  },
+  {
+    ship: "MRKU-4432190", unread: 0,
+    messages: [
+      { from: "client", name: "Katrin Vogel", ts: "2026-07-01 10:02", text: "Can we get stuffing photos for the garden furniture before departure?" },
+      { from: "moov", name: "Hao Lin", ts: "2026-07-01 10:31", text: "Yes — the CFS will photograph the stuffing on 8 Jul and we'll post the photos to your documents the same day." },
+    ],
+  },
+];
+MOOV.threadFor = (shipId) => MOOV.threads.find((t) => t.ship === shipId);
+MOOV.unreadCount = () => MOOV.threads.reduce((n, t) => n + (t.unread || 0), 0);
+
+/* =====================================================================
+   BOOKING / QUOTE REQUESTS (client-initiated, in-portal)
+   ===================================================================== */
+MOOV.bookingRequests = [
+  { id: "BKG-2405", requested: "2026-07-03", origin: "Ningbo", dest: "Rotterdam", containers: "1 × 40'", incoterm: "CIF", ready: "2026-08-01", commodity: "Household plastics", status: "Quote sent", quoteEur: 3180 },
+  { id: "BKG-2398", requested: "2026-06-30", origin: "Shanghai", dest: "Hamburg", containers: "2 × 40'HC", incoterm: "FOB", ready: "2026-07-20", commodity: "Homeware", status: "Pending review" },
+  { id: "BKG-2377", requested: "2026-06-20", origin: "Shenzhen", dest: "Rotterdam", containers: "2 × 40'", incoterm: "DDP", ready: "2026-07-16", commodity: "Toys & seasonal goods", status: "Confirmed", ship: "OOLU-8811223" },
+];
+
+/* =====================================================================
+   OPS ACTION QUEUE (internal side)
+   ===================================================================== */
+MOOV.opsQueue = [
+  { pri: "high", client: "LDL-4471", ship: "TCLU-9902315", title: "Customs hold — awaiting client documents", detail: "Broker needs revised commercial invoice + proof of payment before resubmission.", age: "2h" },
+  { pri: "high", client: "ACT-2210", ship: "MSKU-2210457", title: "Certificate of origin missing — declaration blocked", detail: "Chase supplier for the CO; declaration cannot be lodged without it.", age: "5h" },
+  { pri: "med", client: "WLW-1130", ship: "TGHU-5583901", title: "Arrange final-mile delivery from Hamburg", detail: "Vessel arrived 3 Jul — book inland haulage to the Bochum DC.", age: "1d" },
+  { pri: "med", client: "LDL-4471", ship: "MSKU-7781234", title: "Confirm client informed of revised ETA", detail: "ETA moved +2 days; message sent 5 Jul — confirm inland plan holds.", age: "1d" },
+  { pri: "med", client: "LDL-4471", ship: null, booking: "BKG-2398", title: "Price & send quote for booking BKG-2398", detail: "2 × 40'HC Shanghai → Hamburg, FOB, cargo ready 20 Jul.", age: "6d" },
+];
