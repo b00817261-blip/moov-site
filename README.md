@@ -30,9 +30,12 @@ lives elsewhere; this portal is for current clients and MOOV staff.
   3-step flow:
   1. **Qualification form** — company, what they ship, origin/destination,
      monthly volume, current Incoterm, and service interest.
-  2. **Slot picker** — calendar-style, every slot shown in **CET and China
-     time (CST)**, with some slots pre-booked.
-  3. **Confirmation** — the assigned MOOV expert, with a full summary.
+  2. **Expert & time picker** — a slider of MOOV team members (5 fictional
+     people across the two teams) with role, location, languages and live
+     free-slot counts; picking a person loads *their* calendar, shown in
+     **CET and China time (CST)**.
+  3. **Confirmation** — the chosen expert, Teams invite, participants and a
+     downloadable .ics.
 - **Visual inquiry routing** — 4PL / supply-chain interest routes to the
   **Strategic team** (Élodie Chen); simple freight quotes route to the
   **Freight desk** (Hao Lin). The routing updates live as you pick services.
@@ -87,7 +90,7 @@ A "Demo: switch view" link in each sidebar jumps between the two.
 - **My schedule & availability** (`#/ops/schedule`) — a week grid (CET + CST)
   where a MOOV employee manages their own calendar: click a slot to block or
   reopen it, click a day header to toggle the whole day, switch between
-  experts (Élodie Chen / Hao Lin). Booked prospect calls are locked cells
+  all five staff members. Booked prospect calls are locked cells
   showing company and call type. The grid is backed by the **same data as the
   public "Book a call" slot picker** — blocking a slot hides it from
   prospects instantly, and a new prospect booking appears in the calendar the

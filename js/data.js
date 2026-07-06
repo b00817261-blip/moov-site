@@ -132,11 +132,22 @@ MOOV.slotTimes = [
   { cet: "13:30", cst: "19:30" },
   { cet: "14:30", cst: "20:30" },
 ];
-/* Per-expert schedule — the SAME data drives the public "Book a call"
+/* The bookable MOOV team — prospects pick a person, not just a team. */
+MOOV.people = [
+  { id: "elodie", name: "Élodie Chen", role: "Director, smartMOOV Solutions", team: "strategic", based: "Shanghai · Lyon", initials: "ÉC", langs: ["中文", "Français", "English"], account: "e.chen@moov-logistics.com" },
+  { id: "marco", name: "Marco Visser", role: "4PL Solutions Manager", team: "strategic", based: "Rotterdam", initials: "MV", langs: ["Nederlands", "English", "Deutsch"], account: "m.visser@moov-logistics.com" },
+  { id: "hao", name: "Hao Lin", role: "Senior Freight Consultant", team: "freight", based: "Shanghai", initials: "HL", langs: ["中文", "English", "Deutsch"], account: "h.lin@moov-logistics.com" },
+  { id: "greta", name: "Greta Baum", role: "Freight Consultant, EU Import", team: "freight", based: "Hamburg", initials: "GB", langs: ["Deutsch", "English"], account: "g.baum@moov-logistics.com" },
+  { id: "yuki", name: "Yuki Zhao", role: "Air & Rail Specialist", team: "freight", based: "Shenzhen", initials: "YZ", langs: ["中文", "English", "日本語"], account: "y.zhao@moov-logistics.com" },
+];
+MOOV.person = (id) => MOOV.people.find((p) => p.id === id);
+MOOV.teamPeople = (team) => MOOV.people.filter((p) => p.team === team);
+
+/* Per-person schedule — the SAME data drives the public "Book a call"
    slot picker and the staff availability manager (#/ops/schedule).
    Keyed by "iso|cet"; state: booked | blocked; anything else = free. */
 MOOV.schedule = {
-  strategic: {
+  elodie: {
     entries: {
       "2026-07-06|09:30": { state: "booked", with: "Bolt Home & Living", contact: "Jonas Meyer", attendees: ["j.meyer@bolt-living.example", "s.krug@bolt-living.example"], teams: true, type: "Intro call — 4PL" },
       "2026-07-08|14:30": { state: "booked", with: "Rossmann Import", contact: "Petra Held", attendees: ["p.held@rossmann-import.example"], teams: true, type: "Programme review" },
@@ -144,11 +155,28 @@ MOOV.schedule = {
       "2026-07-09|13:30": { state: "blocked", reason: "Flight to Lyon" },
     },
   },
-  freight: {
+  marco: {
+    entries: {
+      "2026-07-07|09:30": { state: "booked", with: "Normal A/S", contact: "Freja Holm", attendees: ["f.holm@normal.example"], teams: true, type: "Intro call — 4PL" },
+      "2026-07-06|08:30": { state: "blocked", reason: "School run" },
+    },
+  },
+  hao: {
     entries: {
       "2026-07-06|13:30": { state: "booked", with: "Tedi GmbH", contact: "Murat Aydin", attendees: ["m.aydin@tedi.example"], teams: true, type: "Intro call — ocean" },
       "2026-07-07|10:30": { state: "booked", with: "Pepco Group", contact: "Ola Nowak", attendees: ["o.nowak@pepco.example", "k.zielinski@pepco.example", "m.kowal@pepco.example"], teams: true, type: "Quote review" },
       "2026-07-09|09:30": { state: "blocked", reason: "Port visit — Ningbo" },
+    },
+  },
+  greta: {
+    entries: {
+      "2026-07-06|11:30": { state: "booked", with: "Woolworth GmbH", contact: "Sabine Kraus", attendees: ["s.kraus@woolworth.example"], teams: true, type: "Rate review" },
+      "2026-07-08|13:30": { state: "blocked", reason: "Hamburg port visit" },
+    },
+  },
+  yuki: {
+    entries: {
+      "2026-07-08|09:30": { state: "blocked", reason: "Shenzhen depot visit" },
     },
   },
 };
@@ -156,7 +184,7 @@ MOOV.schedule = {
    In production this comes from the Microsoft 365 / Teams calendar via the
    Graph API — here the busy events are canned but drive the same logic. */
 MOOV.calendars = {
-  strategic: {
+  elodie: {
     connected: true, provider: "Microsoft 365", account: "e.chen@moov-logistics.com", lastSync: "2 min ago",
     busy: {
       "2026-07-07|08:30": { title: "Internal — QBR prep" },
@@ -164,7 +192,14 @@ MOOV.calendars = {
       "2026-07-09|09:30": { title: "1:1 with Hao Lin" },
     },
   },
-  freight: {
+  marco: {
+    connected: true, provider: "Microsoft 365", account: "m.visser@moov-logistics.com", lastSync: "1 min ago",
+    busy: {
+      "2026-07-06|10:30": { title: "Warehouse tour — Venlo" },
+      "2026-07-09|11:30": { title: "Internal — network design" },
+    },
+  },
+  hao: {
     connected: true, provider: "Microsoft 365", account: "h.lin@moov-logistics.com", lastSync: "5 min ago",
     busy: {
       "2026-07-06|10:30": { title: "Pricing committee" },
@@ -172,15 +207,28 @@ MOOV.calendars = {
       "2026-07-09|14:30": { title: "Team retro" },
     },
   },
+  greta: {
+    connected: true, provider: "Microsoft 365", account: "g.baum@moov-logistics.com", lastSync: "8 min ago",
+    busy: {
+      "2026-07-07|13:30": { title: "Customs briefing — DEHAM" },
+      "2026-07-09|08:30": { title: "Team huddle" },
+    },
+  },
+  yuki: {
+    connected: false, provider: "Microsoft 365", account: "y.zhao@moov-logistics.com", lastSync: "—",
+    busy: {
+      "2026-07-06|14:30": { title: "Rail corridor sync" },
+    },
+  },
 };
 
 /* Slot resolution order: portal booking > manual block > calendar busy > free.
-   The public picker and the staff schedule both read from this. */
-MOOV.slotState = function (team, iso, cet) {
+   The public picker and the staff schedule both read from this, per person. */
+MOOV.slotState = function (personId, iso, cet) {
   const key = iso + "|" + cet;
-  const entry = MOOV.schedule[team].entries[key];
+  const entry = MOOV.schedule[personId].entries[key];
   if (entry) return entry;
-  const cal = MOOV.calendars[team];
+  const cal = MOOV.calendars[personId];
   if (cal && cal.connected && cal.busy[key]) return { state: "busy", title: cal.busy[key].title };
   return { state: "free" };
 };

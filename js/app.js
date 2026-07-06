@@ -31,6 +31,11 @@
     );
     return strategic ? "strategic" : "freight";
   }
+  /* the person the prospect picked — falls back to the routed team's first expert */
+  function bookingExpert() {
+    const list = MOOV.teamPeople(bookingTeam());
+    return list.find((p) => p.id === MOOV.booking.expert) || list[0];
+  }
 
   /* =====================================================================
      SHARED CHROME
@@ -46,7 +51,7 @@
      VIEW: BOOKING WIZARD
      ===================================================================== */
   function wizardSteps(step) {
-    const labels = ["Your shipping", "Pick a slot", "Confirmed"];
+    const labels = ["Your shipping", "Expert & time", "Confirmed"];
     return `<div class="wizard-steps">${labels.map((l, i) => {
       const n = i + 1;
       const cls = n < step ? "done" : n === step ? "active" : "";
@@ -178,7 +183,30 @@
     </div>`;
   }
 
-  /* -- step 2: slot picker -------------------------------------------- */
+  /* -- step 2: pick your expert, then a time --------------------------- */
+  function expertSlider() {
+    const team = bookingTeam();
+    const sel = bookingExpert();
+    const teamMeta = MOOV.experts[team];
+    const cards = MOOV.teamPeople(team).map((p) => {
+      const freeCount = MOOV.slotDays.reduce((n, d) =>
+        n + MOOV.slotTimes.filter((t) => MOOV.slotState(p.id, d.iso, t.cet).state === "free").length, 0);
+      return `<button type="button" class="exp-card ${p.id===sel.id?'sel':''}" data-expert="${p.id}">
+        <div class="expert-av ${p.team}" style="width:52px;height:52px;font-size:18px">${p.initials}</div>
+        <div class="ec-name">${p.name}</div>
+        <div class="ec-role">${p.role}</div>
+        <div class="ec-meta">${I('pin','i-sm')} ${p.based}</div>
+        <div class="ec-langs">${p.langs.map((l)=>`<span>${l}</span>`).join("")}</div>
+        <div class="ec-free">${freeCount} slots free this week</div>
+      </button>`;
+    }).join("");
+    return `
+      <div class="field" style="margin-top:0">
+        <label>Who would you like to meet? <span class="muted" style="font-weight:500">· ${teamMeta.team}, matched to your inquiry</span></label>
+        <div class="expert-slider">${cards}</div>
+      </div>`;
+  }
+
   function bookStep2() {
     const b = MOOV.booking;
     if (!b.day) b.day = MOOV.slotDays[0].iso;
@@ -187,11 +215,15 @@
       return `<button type="button" class="slot-day ${b.day===d.iso?'sel':''}" data-day="${d.iso}">
         <div class="sd-dow">${dow}</div><div class="sd-date">${rest.join(' ')}</div></button>`;
     }).join("");
-    const exp = MOOV.experts[bookingTeam()];
+    const exp = bookingExpert();
     return `
-      <h2>Pick a time that works</h2>
-      <p class="sub">Live availability for <b>${exp.name}</b> (${exp.team}) — times in Central European Time and China Standard Time.</p>
-      <div class="slot-days">${days}</div>
+      <h2>Choose your expert & a time</h2>
+      <p class="sub">Pick who you'd like to meet — the calendar below shows their live availability.</p>
+      ${expertSlider()}
+      <div class="field">
+        <label>When suits you? <span class="muted" style="font-weight:500">· live availability for ${exp.name}</span></label>
+        <div class="slot-days">${days}</div>
+      </div>
       <div class="tz-note">${I('globe','i-sm')} <span><b>CET</b> (Central European Time) &nbsp;·&nbsp; <b>CST</b> (China Standard Time, CET +6h)</span></div>
       <div class="slot-grid" id="slot-grid">${slotGrid()}</div>
       <div class="card-actions">
@@ -202,9 +234,9 @@
   }
   function slotGrid() {
     const b = MOOV.booking;
-    const team = bookingTeam();
+    const person = bookingExpert();
     return MOOV.slotTimes.map((t) => {
-      const st = MOOV.slotState(team, b.day, t.cet).state;
+      const st = MOOV.slotState(person.id, b.day, t.cet).state;
       const taken = st !== "free";
       const sel = b.slot === t.cet;
       return `<button type="button" class="slot ${sel?'sel':''}" data-slot="${t.cet}" ${taken?'disabled':''}>
@@ -216,13 +248,13 @@
 
   /* A real, downloadable calendar invite (.ics) for the prospect.
      July = CEST (UTC+2), so a 10:30 CET slot is 08:30 UTC. */
-  function bookingIcs(b, exp, day, slot, team) {
+  function bookingIcs(b, exp, day, slot) {
     const [h, m] = slot.cet.split(":").map(Number);
     const pad = (n) => String(n).padStart(2, "0");
     const dayNum = day.iso.replace(/-/g, "");
     const startH = h - 2;
     const endMin = m + 30, endH = startH + Math.floor(endMin / 60);
-    const expEmail = (MOOV.calendars[team] || {}).account || "meet@moov-logistics.com";
+    const expEmail = exp.account || "meet@moov-logistics.com";
     const attendees = [
       "ATTENDEE;CN=" + (b.name || "Prospect") + ";ROLE=REQ-PARTICIPANT;RSVP=TRUE:mailto:" + (b.email || "prospect@example.com"),
     ].concat(b.guests.map((g) => "ATTENDEE;CN=" + g.split("@")[0] + ";ROLE=REQ-PARTICIPANT;RSVP=TRUE:mailto:" + g));
@@ -236,7 +268,7 @@
       "SUMMARY:MOOV intro call — " + (b.company || "Prospect") + " × " + exp.name,
       "ORGANIZER;CN=" + exp.name + ":mailto:" + expEmail,
     ].concat(attendees).concat([
-      "DESCRIPTION:30-minute video call with " + exp.name + " (" + exp.team + ")\\nMicrosoft Teams — join link in your email invite.",
+      "DESCRIPTION:30-minute video call with " + exp.name + " (" + exp.role + ")\\nMicrosoft Teams — join link in your email invite.",
       "LOCATION:Microsoft Teams",
       "END:VEVENT", "END:VCALENDAR",
     ]).join("\r\n");
@@ -248,7 +280,8 @@
   function bookStep3() {
     const b = MOOV.booking;
     const team = bookingTeam();
-    const exp = MOOV.experts[team];
+    const teamMeta = MOOV.experts[team];
+    const exp = bookingExpert();
     const day = MOOV.slotDays.find((d) => d.iso === b.day) || MOOV.slotDays[0];
     const slot = MOOV.slotTimes.find((t) => t.cet === b.slot) || MOOV.slotTimes[0];
     const interestLabels = b.interests.map((id) => (MOOV.serviceInterest.find((s) => s.id === id) || {}).label).filter(Boolean);
@@ -267,7 +300,7 @@
           <div class="muted" style="font-size:13px;margin-top:2px">Invite sent to <b>${b.email || 'your inbox'}</b> and added to ${exp.name}'s Outlook calendar.</div>
           <a href="#" class="link tb-join" style="font-size:13px;display:inline-block;margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">teams.microsoft.com/l/meetup-join/moov-${day.iso}-${slot.cet.replace(':','')}…</a>
         </div>
-        <a class="btn btn-ghost btn-sm" style="flex:none" href="${bookingIcs(b, exp, day, slot, team)}" download="moov-intro-call.ics">${I('calendar','i-sm')} Add to calendar</a>
+        <a class="btn btn-ghost btn-sm" style="flex:none" href="${bookingIcs(b, exp, day, slot)}" download="moov-intro-call.ics">${I('calendar','i-sm')} Add to calendar</a>
       </div>
 
       <div class="att-card">
@@ -299,7 +332,7 @@
       <div class="expert-card ${team}">
         <div class="expert-av ${team}">${exp.initials}</div>
         <div>
-          <div class="e-team">${I(team==='strategic'?'hub':'ship','i-sm')} ${exp.team}</div>
+          <div class="e-team">${I(team==='strategic'?'hub':'ship','i-sm')} ${teamMeta.team}</div>
           <div class="e-name">${exp.name}</div>
           <div class="e-role">${exp.role} · ${exp.based}</div>
           <div class="e-langs">${exp.langs.map((l)=>`<span class="chip">${l}</span>`).join('')}</div>
@@ -313,7 +346,7 @@
         ${b.volume?`<div class="row"><span class="k">Monthly volume</span><span class="v">${b.volume}</span></div>`:''}
         ${b.incoterm?`<div class="row"><span class="k">Current Incoterm</span><span class="v">${b.incoterm}</span></div>`:''}
         ${interestLabels.length?`<div class="row"><span class="k">Interested in</span><span class="v">${interestLabels.join(', ')}</span></div>`:''}
-        <div class="row"><span class="k">Routed to</span><span class="v">${exp.team}</span></div>
+        <div class="row"><span class="k">Routed to</span><span class="v">${teamMeta.team} — ${exp.name}</span></div>
       </div>
 
       <div class="card-actions">
@@ -351,8 +384,13 @@
         el("route-hint-slot").innerHTML = routeHint();
       }));
       const next = el("to-step2");
-      next && next.addEventListener("click", () => { b.step = 2; render(); });
+      next && next.addEventListener("click", () => { b.step = 2; b.slot = null; render(); });
     } else if (b.step === 2) {
+      $$(".exp-card").forEach((c) => c.addEventListener("click", () => {
+        if (b.expert === c.dataset.expert) return;
+        b.expert = c.dataset.expert; b.slot = null;
+        render();
+      }));
       $$(".slot-day").forEach((d) => d.addEventListener("click", () => {
         b.day = d.dataset.day; b.slot = null;
         $$(".slot-day").forEach((x) => x.classList.toggle("sel", x.dataset.day === b.day));
@@ -363,8 +401,8 @@
       bindSlots();
       el("back-step1") && el("back-step1").addEventListener("click", () => { b.step = 1; render(); });
       el("to-step3") && el("to-step3").addEventListener("click", () => {
-        // the confirmed slot lands in the assigned expert's Outlook calendar
-        MOOV.schedule[bookingTeam()].entries[b.day + "|" + b.slot] = {
+        // the confirmed slot lands in the chosen expert's Outlook calendar
+        MOOV.schedule[bookingExpert().id].entries[b.day + "|" + b.slot] = {
           state: "booked", with: b.company || "New prospect", contact: b.name || "",
           attendees: [b.email].concat(b.guests), type: "Intro call", teams: true, isNew: true,
         };
@@ -373,7 +411,7 @@
     } else if (b.step === 3) {
       const join = $(".tb-join");
       join && join.addEventListener("click", (e) => { e.preventDefault(); toast("Prototype — the Teams meeting would open here"); });
-      const entry = MOOV.schedule[bookingTeam()].entries[b.day + "|" + b.slot];
+      const entry = MOOV.schedule[bookingExpert().id].entries[b.day + "|" + b.slot];
       const syncAttendees = () => { if (entry) entry.attendees = [b.email].concat(b.guests); };
       const addGuest = () => {
         const input = el("guest-email");
@@ -510,7 +548,7 @@
           ${navItem('#/ops','zap','Action queue','queue', MOOV.opsQueue.length)}
           ${navItem('#/ops/shipments','box','All shipments','shipments', openExceptions ? openExceptions : '')}
           ${navItem('#/ops/clients','building','Clients','clients')}
-          ${navItem('#/ops/schedule','calendar','My schedule','schedule', Object.values(MOOV.schedule[MOOV.session.expert || 'strategic'].entries).filter(e=>e.state==='booked').length)}
+          ${navItem('#/ops/schedule','calendar','My schedule','schedule', Object.values(MOOV.schedule[MOOV.session.expert || 'elodie'].entries).filter(e=>e.state==='booked').length)}
         </nav>
         <div class="side-foot">
           <div class="side-user">
@@ -1220,8 +1258,8 @@
      blocking a slot here hides it from prospects instantly.
      ===================================================================== */
   function viewOpsSchedule() {
-    const expKey = MOOV.session.expert || "strategic";
-    const exp = MOOV.experts[expKey];
+    const expKey = MOOV.session.expert || "elodie";
+    const exp = MOOV.person(expKey);
     const cal = MOOV.calendars[expKey];
     let booked = 0, blocked = 0, busy = 0, open = 0;
     MOOV.slotDays.forEach((d) => MOOV.slotTimes.forEach((t) => {
@@ -1296,8 +1334,7 @@
           <p>What you open here is exactly what prospects can book on the public “Book a call” page.</p>
         </div>
         <select class="select" id="sched-expert" style="width:auto;padding:9px 13px">
-          <option value="strategic" ${expKey==='strategic'?'selected':''}>Élodie Chen — Strategic team</option>
-          <option value="freight" ${expKey==='freight'?'selected':''}>Hao Lin — Freight desk</option>
+          ${MOOV.people.map((p) => `<option value="${p.id}" ${expKey===p.id?'selected':''}>${p.name} — ${MOOV.experts[p.team].team}</option>`).join("")}
         </select>
       </div>
       ${calPanel}
@@ -1309,7 +1346,7 @@
       </div>
       <div class="panel">
         <div class="p-head">
-          <h3>Week of 6 Jul — ${exp.name} <span class="muted" style="font-weight:500;font-size:13px">· ${exp.team} · ${exp.based}</span></h3>
+          <h3>Week of 6 Jul — ${exp.name} <span class="muted" style="font-weight:500;font-size:13px">· ${exp.role} · ${exp.based}</span></h3>
           <div class="lane-legend">
             <span><i style="background:var(--success)"></i> Available</span>
             <span><i style="background:var(--blue-500)"></i> Booked</span>
@@ -1534,7 +1571,7 @@
 
     // ops schedule: availability toggles + calendar connection
     if (route.name === "opsSchedule") {
-      const expKey = MOOV.session.expert || "strategic";
+      const expKey = MOOV.session.expert || "elodie";
       const entries = MOOV.schedule[expKey].entries;
       const cal = MOOV.calendars[expKey];
       const stateOf = (key) => MOOV.slotState(expKey, key.split("|")[0], key.split("|")[1]).state;
