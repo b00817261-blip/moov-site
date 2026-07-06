@@ -57,8 +57,8 @@
     },
     {
       id: "services",
-      keywords: ["services", "service", "offer", "offers", "solutions", "capabilities", "provide"],
-      phrases: ["what do you do", "what can you do", "what does moov do", "help me with"],
+      keywords: ["services", "service", "offer", "offers", "solutions", "capabilities", "provide", "help"],
+      phrases: ["what do you do", "what can you do", "what does moov do", "what moov does", "help me with", "list of services", "tell me about your services", "what do you offer", "can you help"],
       answer: function () {
         return (
           "MOOV covers the full scope of supply chain services:<br><br>" +
@@ -173,8 +173,8 @@
     },
     {
       id: "tracking",
-      keywords: ["track", "tracking", "trace", "status", "eta", "located"],
-      phrases: ["where is my", "track my", "shipment status", "my cargo", "my container", "my shipment"],
+      keywords: ["track", "tracking", "trace", "status", "eta", "located", "follow", "locate"],
+      phrases: ["where is my", "where s my", "track my", "track a shipment", "how do i track", "how can i track", "shipment status", "order status", "my cargo", "my container", "my shipment", "my order", "follow my"],
       answer: function () {
         return (
           "You can follow your cargo in real time through the <b>smartMOOV platform</b> — it has an integrated tracking module showing where your cargo is and the latest schedule updates.<br><br>" +
@@ -248,7 +248,7 @@
     {
       id: "pricing",
       keywords: ["price", "prices", "pricing", "cost", "costs", "rate", "rates", "quote", "quotation", "fee", "fees", "charge", "charges", "tariff", "budget", "cheap", "cheaper", "expensive", "discount"],
-      phrases: ["how much", "get a quote", "price list", "what does it cost", "what would it cost", "ballpark"],
+      phrases: ["how much", "get a quote", "price list", "what does it cost", "what would it cost", "ballpark", "shipping cost", "cost of shipping", "cost to ship", "quote for", "quote me", "need a quote", "request a quote", "an estimate"],
       weight: 2, // pricing wins ties — it's the money question
       answer: function () {
         return (
@@ -321,6 +321,52 @@
       chips: ["Customs clearance", "Contact MOOV"],
     },
     {
+      id: "domestic",
+      keywords: ["trucking", "truck", "domestic", "inland", "distribution", "haulage", "delivery"],
+      phrases: ["domestic transportation", "domestic transport", "last mile", "inland transport", "local delivery", "door to door", "trucking", "by truck", "by road"],
+      answer: function () {
+        return (
+          "MOOV handles <b>domestic transportation</b> too — trucking and distribution that connect our warehouses, the ports and your final destinations, fully integrated with our freight forwarding and customs services so one partner covers the whole door-to-door move."
+        );
+      },
+      chips: ["Warehousing", "Get a quote"],
+    },
+    {
+      id: "ecommerce",
+      keywords: ["ecommerce", "e-commerce", "amazon", "shopify", "b2c", "marketplace", "webshop", "dropshipping"],
+      phrases: ["online store", "online shop", "e commerce"],
+      answer: function () {
+        return (
+          "Yes — MOOV supports e-commerce supply chains. Our warehouses in China's major port cities handle <b>fulfillment-style operations</b>: storage, quality inspection, pick &amp; pack, labeling and kitting, connected to ocean, air and rail freight for replenishment. Tell us about your channels and volumes and we'll design the right setup."
+        );
+      },
+      chips: ["Warehousing", "Get a quote"],
+    },
+    {
+      id: "industries",
+      keywords: ["industries", "industry", "automotive", "electronics", "fashion", "retail", "machinery", "food", "textile", "furniture"],
+      phrases: ["what industries", "which industries", "do you work with", "experience with"],
+      answer: function () {
+        return (
+          "MOOV serves virtually every industry — from <b>pharmaceuticals</b> and <b>industrial machinery</b> to <b>perishable food</b>, retail and consumer goods. Each supply chain gets a tailored setup rather than a one-size-fits-all approach: we take time to understand your products and channels first."
+        );
+      },
+      chips: ["What services do you offer?", "Get a quote"],
+    },
+    {
+      id: "getting_started",
+      keywords: ["start", "started", "onboard", "onboarding", "account", "register", "signup"],
+      phrases: ["get started", "how do i start", "work with you", "work with moov", "become a customer", "become a client", "open an account", "how does it work", "next step"],
+      answer: function () {
+        return (
+          "Getting started is simple: tell us about your supply chain — routes, volumes, cargo — and a MOOV expert designs a proposal around it. <b>Leave your email below</b> and we'll reach out to you, or use the form at " +
+          LINK(cfg.contactPage, "moovlogistics.com/contact-us") + "."
+        );
+      },
+      captureEmail: true,
+      chips: [],
+    },
+    {
       id: "thanks",
       keywords: ["thanks", "thank", "merci", "great", "perfect", "awesome", "helpful"],
       phrases: ["thank you"],
@@ -356,7 +402,14 @@
   var EMAIL_RE = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/;
 
   function matchIntent(text) {
-    var lower = " " + text.toLowerCase().replace(/[^a-z0-9@.\s-]/g, " ") + " ";
+    var lower = " " + text.toLowerCase().replace(/[^a-z0-9@.\s-]/g, " ").replace(/\s+/g, " ") + " ";
+    // token set with light plural/singular normalization so
+    // "containers", "warehouses", "rates" hit their singular keywords
+    var tokens = {};
+    lower.trim().split(" ").forEach(function (t) {
+      tokens[t] = true;
+      if (t.length > 3 && t.slice(-1) === "s") tokens[t.slice(0, -1)] = true;
+    });
     var best = null;
     var bestScore = 0;
     INTENTS.forEach(function (intent) {
@@ -366,7 +419,7 @@
         if (lower.indexOf(p) !== -1) score += 3 * w;
       });
       (intent.keywords || []).forEach(function (k) {
-        if (lower.indexOf(" " + k + " ") !== -1) score += 1 * w;
+        if (tokens[k] || tokens[k + "s"]) score += 1 * w;
       });
       if (score > bestScore) {
         bestScore = score;
@@ -604,23 +657,34 @@
 
     // 2. Waiting for an email but didn't get one.
     if (state.awaitingEmail) {
-      var declined = /\b(no|nope|skip|later|cancel|don'?t|stop)\b/i.test(text);
       var intentWhileWaiting = matchIntent(text);
+      // A real question always wins — answer it immediately instead of
+      // nagging for the email (they can leave it anytime later).
+      if (intentWhileWaiting && intentWhileWaiting.id !== "pricing") {
+        exitEmailMode();
+        respondWithIntent(intentWhileWaiting, text);
+        return;
+      }
+      var declined = /\b(no|nope|skip|later|cancel|don'?t|stop)\b/i.test(text);
       if (declined) {
         exitEmailMode();
         botSay("No problem! You can also reach the team anytime via " + LINK(cfg.contactPage, "our contact page") + ". What else can I help you with?", FALLBACK_CHIPS);
         return;
       }
-      if (intentWhileWaiting && state.emailNudges >= 1) {
-        // They clearly moved on — answer the new question.
-        exitEmailMode();
-        respondWithIntent(intentWhileWaiting, text);
+      // Looks like a failed email attempt (has an @) — nudge once.
+      if (text.indexOf("@") !== -1 && state.emailNudges < 1) {
+        state.emailNudges++;
+        botSay(
+          "That doesn't look like a complete email address 🙂 — could you double-check it? (e.g. <i>name@company.com</i>)<br>Or type <b>skip</b> if you'd rather not leave one.",
+          []
+        );
         return;
       }
-      state.emailNudges++;
+      // Anything else: stop insisting, fall through to normal handling.
+      exitEmailMode();
       botSay(
-        "That doesn't look like an email address 🙂 — could you double-check it? (e.g. <i>name@company.com</i>)<br>Or type <b>skip</b> if you'd rather not leave one.",
-        []
+        fallbackAnswer() + "<br><br><i>(And if you'd still like that quote, just drop your email anytime.)</i>",
+        FALLBACK_CHIPS
       );
       return;
     }
