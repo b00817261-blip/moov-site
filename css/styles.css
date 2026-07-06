@@ -713,3 +713,51 @@ a.kpi:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+/* =====================================================================
+   V3 — staff schedule / availability grid
+   ===================================================================== */
+.sched-grid {
+  display: grid; grid-template-columns: 84px repeat(4, 1fr); gap: 8px;
+  min-width: 680px;
+}
+.panel .sched-grid { overflow-x: visible; }
+.panel:has(.sched-grid) { overflow-x: auto; }
+.sched-corner { padding: 10px 6px; }
+.sched-day {
+  border: 1px solid var(--line); background: var(--canvas); border-radius: var(--r-md);
+  padding: 10px 8px; text-align: center; transition: all .14s;
+}
+.sched-day:hover { border-color: var(--navy-800); background: #fff; }
+.sched-day .sd-dow { font-size: 12px; font-weight: 600; color: var(--ink-3); }
+.sched-day .sd-date { font-size: 15px; font-weight: 800; margin-top: 1px; }
+.sched-day .sd-hint { font-size: 10.5px; color: var(--ink-3); margin-top: 3px; text-transform: uppercase; letter-spacing: .05em; }
+.sched-time { padding: 10px 6px; align-self: center; }
+.sched-cell {
+  border-radius: var(--r-md); padding: 10px 12px; text-align: left; min-height: 62px;
+  transition: all .13s; position: relative; font-family: inherit;
+}
+.sched-cell .sc-t { font-weight: 700; font-size: 13px; }
+.sched-cell .sc-s { font-size: 11.5px; margin-top: 2px; }
+.sched-cell.free { background: #fff; border: 1px solid var(--line); }
+.sched-cell.free .sc-t { color: var(--success); }
+.sched-cell.free .sc-s { color: var(--ink-3); }
+.sched-cell.free:hover { border-color: var(--danger); background: var(--danger-bg); }
+.sched-cell.free:hover .sc-t { color: var(--danger); }
+.sched-cell.free:hover .sc-t::after { content: " → block"; font-weight: 600; }
+.sched-cell.blocked {
+  background: var(--canvas-2); border: 1px dashed var(--ink-3); color: var(--ink-3);
+  background-image: repeating-linear-gradient(-45deg, transparent, transparent 6px, rgba(100,116,139,.07) 6px, rgba(100,116,139,.07) 12px);
+}
+.sched-cell.blocked:hover { border-color: var(--success); background-color: var(--success-bg); }
+.sched-cell.blocked:hover .sc-t::after { content: " → reopen"; color: var(--success); font-weight: 600; }
+.sched-cell.booked {
+  background: var(--blue-050); border: 1px solid var(--blue-400); color: var(--navy-800);
+  cursor: not-allowed;
+}
+.sched-cell.booked .i { position: absolute; top: 9px; right: 10px; color: var(--blue-500); width: 14px; height: 14px; }
+.sched-cell.booked .sc-s { color: var(--info); }
+.sched-cell.booked.isnew { box-shadow: 0 0 0 3px rgba(20,184,166,.35); border-color: var(--teal-500); }
+@media (max-width: 960px) {
+  .sched-grid { min-width: 640px; }
+}

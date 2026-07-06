@@ -132,8 +132,27 @@ MOOV.slotTimes = [
   { cet: "13:30", cst: "19:30" },
   { cet: "14:30", cst: "20:30" },
 ];
-/* A few slots taken, to feel real (keyed by "iso|cet") */
-MOOV.slotsTaken = new Set(["2026-07-06|09:30", "2026-07-06|13:30", "2026-07-07|10:30", "2026-07-08|14:30"]);
+/* Per-expert schedule — the SAME data drives the public "Book a call"
+   slot picker and the staff availability manager (#/ops/schedule).
+   Keyed by "iso|cet"; state: booked | blocked; anything else = free. */
+MOOV.schedule = {
+  strategic: {
+    entries: {
+      "2026-07-06|09:30": { state: "booked", with: "Bolt Home & Living", type: "Intro call — 4PL" },
+      "2026-07-08|14:30": { state: "booked", with: "Rossmann Import", type: "Programme review" },
+      "2026-07-07|11:30": { state: "blocked", reason: "Team stand-up" },
+      "2026-07-09|13:30": { state: "blocked", reason: "Flight to Lyon" },
+    },
+  },
+  freight: {
+    entries: {
+      "2026-07-06|13:30": { state: "booked", with: "Tedi GmbH", type: "Intro call — ocean" },
+      "2026-07-07|10:30": { state: "booked", with: "Pepco Group", type: "Quote review" },
+      "2026-07-09|09:30": { state: "blocked", reason: "Port visit — Ningbo" },
+    },
+  },
+};
+MOOV.slotState = (team, iso, cet) => (MOOV.schedule[team].entries[iso + "|" + cet] || { state: "free" });
 
 /* =====================================================================
    CLIENT DASHBOARD — demo account "Lidl Trading"

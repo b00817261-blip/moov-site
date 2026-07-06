@@ -309,9 +309,10 @@
       return `<button type="button" class="slot-day ${b.day===d.iso?'sel':''}" data-day="${d.iso}">
         <div class="sd-dow">${dow}</div><div class="sd-date">${rest.join(' ')}</div></button>`;
     }).join("");
+    const exp = MOOV.experts[bookingTeam()];
     return `
       <h2>Pick a time that works</h2>
-      <p class="sub">Times shown in Central European Time and China Standard Time.</p>
+      <p class="sub">Live availability for <b>${exp.name}</b> (${exp.team}) — times in Central European Time and China Standard Time.</p>
       <div class="slot-days">${days}</div>
       <div class="tz-note">${I('globe','i-sm')} <span><b>CET</b> (Central European Time) &nbsp;·&nbsp; <b>CST</b> (China Standard Time, CET +6h)</span></div>
       <div class="slot-grid" id="slot-grid">${slotGrid()}</div>
@@ -323,13 +324,14 @@
   }
   function slotGrid() {
     const b = MOOV.booking;
+    const team = bookingTeam();
     return MOOV.slotTimes.map((t) => {
-      const key = b.day + "|" + t.cet;
-      const taken = MOOV.slotsTaken.has(key);
+      const st = MOOV.slotState(team, b.day, t.cet).state;
+      const taken = st !== "free";
       const sel = b.slot === t.cet;
       return `<button type="button" class="slot ${sel?'sel':''}" data-slot="${t.cet}" ${taken?'disabled':''}>
         <div class="s-cet">${t.cet} <span style="font-size:11px;color:var(--ink-3);font-weight:600">CET</span></div>
-        <div class="s-cst">${t.cst} CST${taken?' · booked':''}</div>
+        <div class="s-cst">${t.cst} CST${st==='booked'?' · booked':st==='blocked'?' · unavailable':''}</div>
       </button>`;
     }).join("");
   }
@@ -412,7 +414,12 @@
       }));
       bindSlots();
       el("back-step1") && el("back-step1").addEventListener("click", () => { b.step = 1; render(); });
-      el("to-step3") && el("to-step3").addEventListener("click", () => { b.step = 3; render(); });
+      el("to-step3") && el("to-step3").addEventListener("click", () => {
+        // the confirmed slot lands in the assigned expert's schedule
+        MOOV.schedule[bookingTeam()].entries[b.day + "|" + b.slot] =
+          { state: "booked", with: b.company || "New prospect", type: "Intro call", isNew: true };
+        b.step = 3; render();
+      });
     }
   }
   function bindSlots() {
@@ -530,6 +537,7 @@
           ${navItem('#/ops','zap','Action queue','queue', MOOV.opsQueue.length)}
           ${navItem('#/ops/shipments','box','All shipments','shipments', openExceptions ? openExceptions : '')}
           ${navItem('#/ops/clients','building','Clients','clients')}
+          ${navItem('#/ops/schedule','calendar','My schedule','schedule', Object.values(MOOV.schedule[MOOV.session.expert || 'strategic'].entries).filter(e=>e.state==='booked').length)}
         </nav>
         <div class="side-foot">
           <div class="side-user">
@@ -1234,6 +1242,86 @@
   }
 
   /* =====================================================================
+     OPS: MY SCHEDULE & AVAILABILITY
+     The same entries power the public "Book a call" slot picker —
+     blocking a slot here hides it from prospects instantly.
+     ===================================================================== */
+  function viewOpsSchedule() {
+    const expKey = MOOV.session.expert || "strategic";
+    const exp = MOOV.experts[expKey];
+    const entries = MOOV.schedule[expKey].entries;
+    const total = MOOV.slotDays.length * MOOV.slotTimes.length;
+    const booked = Object.values(entries).filter((e) => e.state === "booked").length;
+    const blocked = Object.values(entries).filter((e) => e.state === "blocked").length;
+    const open = total - booked - blocked;
+
+    const headRow = `<div class="sched-corner">
+        <div style="font-weight:700;font-size:12.5px">CET</div>
+        <div class="subtle" style="font-size:11.5px">CST +6h</div>
+      </div>` + MOOV.slotDays.map((d) => {
+        const [dow, ...rest] = d.date.split(" ");
+        return `<button class="sched-day" data-day="${d.iso}" title="Toggle the whole day">
+          <div class="sd-dow">${dow}</div><div class="sd-date">${rest.join(" ")}</div>
+          <div class="sd-hint">toggle day</div>
+        </button>`;
+      }).join("");
+
+    const rows = MOOV.slotTimes.map((t) => {
+      const cells = MOOV.slotDays.map((d) => {
+        const key = d.iso + "|" + t.cet;
+        const e = entries[key];
+        if (e && e.state === "booked") {
+          return `<button class="sched-cell booked ${e.isNew?'isnew':''}" data-key="${key}" title="Booked calls can't be blocked here">
+            ${I('lock','i-sm')} <div class="sc-t">${e.with}</div><div class="sc-s">${e.type}${e.isNew?' · just booked':''}</div>
+          </button>`;
+        }
+        if (e && e.state === "blocked") {
+          return `<button class="sched-cell blocked" data-key="${key}" title="Click to reopen this slot">
+            <div class="sc-t">Blocked</div><div class="sc-s">${e.reason || 'Unavailable'}</div>
+          </button>`;
+        }
+        return `<button class="sched-cell free" data-key="${key}" title="Click to block this slot">
+          <div class="sc-t">Available</div><div class="sc-s">on booking page</div>
+        </button>`;
+      }).join("");
+      return `<div class="sched-time"><div style="font-weight:700">${t.cet}</div><div class="subtle" style="font-size:11.5px">${t.cst}</div></div>${cells}`;
+    }).join("");
+
+    const body = `
+      <div class="page-head" style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap">
+        <div style="flex:1">
+          <h1>My schedule & availability</h1>
+          <p>What you open here is exactly what prospects can book on the public “Book a call” page.</p>
+        </div>
+        <select class="select" id="sched-expert" style="width:auto;padding:9px 13px">
+          <option value="strategic" ${expKey==='strategic'?'selected':''}>Élodie Chen — Strategic team</option>
+          <option value="freight" ${expKey==='freight'?'selected':''}>Hao Lin — Freight desk</option>
+        </select>
+      </div>
+      <div class="mini-stats">
+        <div class="mini-stat"><div class="ms-k">Booked calls this week</div><div class="ms-v">${booked}</div></div>
+        <div class="mini-stat"><div class="ms-k">Open to prospects</div><div class="ms-v" style="color:var(--success)">${open}</div></div>
+        <div class="mini-stat"><div class="ms-k">Blocked</div><div class="ms-v">${blocked}</div></div>
+      </div>
+      <div class="panel">
+        <div class="p-head">
+          <h3>Week of 6 Jul — ${exp.name} <span class="muted" style="font-weight:500;font-size:13px">· ${exp.team} · ${exp.based}</span></h3>
+          <div class="lane-legend">
+            <span><i style="background:var(--success)"></i> Available</span>
+            <span><i style="background:var(--blue-500)"></i> Booked</span>
+            <span><i style="background:var(--ink-3)"></i> Blocked</span>
+          </div>
+        </div>
+        <div class="sched-grid">${headRow}${rows}</div>
+        <div class="route-hint freight" style="margin-top:18px">
+          <div class="rh-icn">${I('zap','i-sm')}</div>
+          <div><b>Changes go live instantly</b><span class="muted">Block a slot and it disappears from the booking page; new prospect bookings appear here the moment they confirm. <a class="link" href="#/book">Try the booking page →</a></span></div>
+        </div>
+      </div>`;
+    return opsShell("schedule", "My schedule", `<a href="#/ops">Operations console</a>`, body);
+  }
+
+  /* =====================================================================
      ROUTER
      ===================================================================== */
   function parseHash() {
@@ -1262,13 +1350,14 @@
       if (parts[1] === "shipments" && parts[2]) return { name: "opsShipment", id: decodeURIComponent(parts[2]), params };
       if (parts[1] === "shipments") return { name: "opsShipments", params };
       if (parts[1] === "clients") return { name: "opsClients", params };
+      if (parts[1] === "schedule") return { name: "opsSchedule", params };
       return { name: "opsQueue", params };
     }
     return { name: "home" };
   }
 
   const CLIENT_ROUTES = ["overview", "shipments", "shipment", "bookings", "documents", "invoices", "messages"];
-  const OPS_ROUTES = ["opsQueue", "opsShipments", "opsShipment", "opsClients"];
+  const OPS_ROUTES = ["opsQueue", "opsShipments", "opsShipment", "opsClients", "opsSchedule"];
 
   function render() {
     const route = parseHash();
@@ -1292,6 +1381,7 @@
       case "opsShipments": html = viewOpsShipments(p.c, p.f); break;
       case "opsShipment": html = viewShipmentDetail(route.id, true); break;
       case "opsClients": html = viewOpsClients(); break;
+      case "opsSchedule": html = viewOpsSchedule(); break;
       default: html = viewHome();
     }
     app.innerHTML = html;
@@ -1437,6 +1527,33 @@
         s.events.push({ stage: s.stage, ts: "2026-07-06 · just now", place: "MOOV Ops", note: "Hold released — declaration accepted, container free to move." });
         render(); toast("Hold resolved — client notified");
       });
+    }
+
+    // ops schedule: availability toggles
+    if (route.name === "opsSchedule") {
+      const expKey = MOOV.session.expert || "strategic";
+      const entries = MOOV.schedule[expKey].entries;
+      $$(".sched-cell").forEach((c) => c.addEventListener("click", () => {
+        const key = c.dataset.key;
+        const e = entries[key];
+        if (e && e.state === "booked") { toast("Booked calls can't be blocked — reschedule with the prospect first"); return; }
+        if (e && e.state === "blocked") { delete entries[key]; render(); toast("Slot reopened — visible on the booking page"); }
+        else { entries[key] = { state: "blocked", reason: "Blocked by you" }; render(); toast("Slot blocked — hidden from the booking page"); }
+      }));
+      $$(".sched-day").forEach((d) => d.addEventListener("click", () => {
+        const iso = d.dataset.day;
+        const dayKeys = MOOV.slotTimes.map((t) => iso + "|" + t.cet);
+        const anyFree = dayKeys.some((k) => !entries[k]);
+        if (anyFree) {
+          dayKeys.forEach((k) => { if (!entries[k]) entries[k] = { state: "blocked", reason: "Out of office" }; });
+          render(); toast("Day blocked (booked calls kept) — hidden from the booking page");
+        } else {
+          dayKeys.forEach((k) => { if (entries[k] && entries[k].state === "blocked") delete entries[k]; });
+          render(); toast("Day reopened — visible on the booking page");
+        }
+      }));
+      const sel = el("sched-expert");
+      sel && sel.addEventListener("change", () => { MOOV.session.expert = sel.value; render(); });
     }
 
     // ops shipments: client switcher

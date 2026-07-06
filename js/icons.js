@@ -34,6 +34,7 @@ MOOV.icon = function (name, cls) {
     shield: '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z"/>',
     chevron: '<path d="M9 6l6 6-6 6"/>',
     chevleft: '<path d="M15 6l-6 6 6 6"/>',
+    lock: '<rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V7a4 4 0 018 0v4M12 15v2.5"/>',
     menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
     pin: '<path d="M12 21s7-6 7-11a7 7 0 10-14 0c0 5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/>',
     trend: '<path d="M3 17l6-6 4 4 8-8M21 7v5M21 7h-5"/>',

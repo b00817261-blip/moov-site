@@ -82,6 +82,14 @@ A "Demo: switch view" link in each sidebar jumps between the two.
 - **Ops actions on a shipment** — advance the milestone or resolve a customs
   hold; changes appear immediately in the client's view (shared data layer —
   exactly the "control tower produces what clients consume" model).
+- **My schedule & availability** (`#/ops/schedule`) — a week grid (CET + CST)
+  where a MOOV employee manages their own calendar: click a slot to block or
+  reopen it, click a day header to toggle the whole day, switch between
+  experts (Élodie Chen / Hao Lin). Booked prospect calls are locked cells
+  showing company and call type. The grid is backed by the **same data as the
+  public "Book a call" slot picker** — blocking a slot hides it from
+  prospects instantly, and a new prospect booking appears in the calendar the
+  moment it's confirmed (highlighted "just booked").
 
 ## Project structure
 
