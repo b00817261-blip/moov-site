@@ -152,7 +152,38 @@ MOOV.schedule = {
     },
   },
 };
-MOOV.slotState = (team, iso, cet) => (MOOV.schedule[team].entries[iso + "|" + cet] || { state: "free" });
+/* Connected work calendars (simulates a Microsoft Graph free/busy sync).
+   In production this comes from the Microsoft 365 / Teams calendar via the
+   Graph API — here the busy events are canned but drive the same logic. */
+MOOV.calendars = {
+  strategic: {
+    connected: true, provider: "Microsoft 365", account: "e.chen@moov-logistics.com", lastSync: "2 min ago",
+    busy: {
+      "2026-07-07|08:30": { title: "Internal — QBR prep" },
+      "2026-07-08|10:30": { title: "Carrier review — Maersk" },
+      "2026-07-09|09:30": { title: "1:1 with Hao Lin" },
+    },
+  },
+  freight: {
+    connected: true, provider: "Microsoft 365", account: "h.lin@moov-logistics.com", lastSync: "5 min ago",
+    busy: {
+      "2026-07-06|10:30": { title: "Pricing committee" },
+      "2026-07-08|08:30": { title: "Depot visit — Waigaoqiao" },
+      "2026-07-09|14:30": { title: "Team retro" },
+    },
+  },
+};
+
+/* Slot resolution order: portal booking > manual block > calendar busy > free.
+   The public picker and the staff schedule both read from this. */
+MOOV.slotState = function (team, iso, cet) {
+  const key = iso + "|" + cet;
+  const entry = MOOV.schedule[team].entries[key];
+  if (entry) return entry;
+  const cal = MOOV.calendars[team];
+  if (cal && cal.connected && cal.busy[key]) return { state: "busy", title: cal.busy[key].title };
+  return { state: "free" };
+};
 
 /* =====================================================================
    CLIENT DASHBOARD — demo account "Lidl Trading"

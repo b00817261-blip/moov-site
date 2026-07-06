@@ -20,9 +20,10 @@
 
   /* ---- ephemeral booking state -------------------------------------- */
   MOOV.booking = MOOV.booking || {
-    step: 1, company: "", ship: "", origin: "", dest: "", volume: "",
+    step: 1, company: "", email: "", ship: "", origin: "", dest: "", volume: "",
     incoterm: "", interests: [], day: null, slot: null,
   };
+  const emailOk = (v) => /\S+@\S+\.\S+/.test(v || "");
   function bookingTeam() {
     const b = MOOV.booking;
     const strategic = b.interests.some(
@@ -82,7 +83,8 @@
         ${wizardSteps(b.step)}
         <div class="card">${inner}</div>
       </div>
-    </div>`);
+    </div>
+    <div class="toast" id="toast"></div>`);
   }
 
   /* -- step 1: qualification ------------------------------------------ */
@@ -103,10 +105,17 @@
       <h2>Tell us what you ship</h2>
       <p class="sub">Six quick fields. This helps us bring the right expert to your call.</p>
 
-      <div class="field">
-        <label>Company name <span class="req">*</span></label>
-        <input class="input" id="f-company" placeholder="e.g. Lidl Trading" value="${b.company||''}">
+      <div class="field-row">
+        <div class="field">
+          <label>Company name <span class="req">*</span></label>
+          <input class="input" id="f-company" placeholder="e.g. Lidl Trading" value="${b.company||''}">
+        </div>
+        <div class="field">
+          <label>Work email <span class="req">*</span></label>
+          <input class="input" id="f-email" type="email" placeholder="you@company.com" value="${b.email||''}">
+        </div>
       </div>
+      <p class="muted" style="font-size:12.5px;margin-top:8px">${I('calendar','i-sm')} We'll send the calendar invite and Microsoft Teams link here.</p>
 
       <div class="field">
         <label>What do you ship?</label>
@@ -144,7 +153,7 @@
 
       <div class="card-actions">
         <a class="btn btn-ghost" href="#/">Cancel</a>
-        <button class="btn btn-primary" id="to-step2" ${b.company?'':'disabled'}>Choose a time ${I('arrow','i-sm')}</button>
+        <button class="btn btn-primary" id="to-step2" ${b.company && emailOk(b.email)?'':'disabled'}>Choose a time ${I('arrow','i-sm')}</button>
       </div>
     `;
   }
@@ -196,9 +205,32 @@
       const sel = b.slot === t.cet;
       return `<button type="button" class="slot ${sel?'sel':''}" data-slot="${t.cet}" ${taken?'disabled':''}>
         <div class="s-cet">${t.cet} <span style="font-size:11px;color:var(--ink-3);font-weight:600">CET</span></div>
-        <div class="s-cst">${t.cst} CST${st==='booked'?' · booked':st==='blocked'?' · unavailable':''}</div>
+        <div class="s-cst">${t.cst} CST${st==='booked'?' · booked':taken?' · unavailable':''}</div>
       </button>`;
     }).join("");
+  }
+
+  /* A real, downloadable calendar invite (.ics) for the prospect.
+     July = CEST (UTC+2), so a 10:30 CET slot is 08:30 UTC. */
+  function bookingIcs(b, exp, day, slot) {
+    const [h, m] = slot.cet.split(":").map(Number);
+    const pad = (n) => String(n).padStart(2, "0");
+    const dayNum = day.iso.replace(/-/g, "");
+    const startH = h - 2;
+    const endMin = m + 30, endH = startH + Math.floor(endMin / 60);
+    const ics = [
+      "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//MOOV Logistics//Booking//EN",
+      "BEGIN:VEVENT",
+      "UID:moov-" + dayNum + "-" + slot.cet.replace(":", "") + "@moov-logistics.com",
+      "DTSTAMP:" + dayNum + "T000000Z",
+      "DTSTART:" + dayNum + "T" + pad(startH) + pad(m) + "00Z",
+      "DTEND:" + dayNum + "T" + pad(endH) + pad(endMin % 60) + "00Z",
+      "SUMMARY:MOOV intro call — " + (b.company || "Prospect") + " × " + exp.name,
+      "DESCRIPTION:30-minute video call with " + exp.name + " (" + exp.team + ")\\nMicrosoft Teams — join link in your email invite.",
+      "LOCATION:Microsoft Teams",
+      "END:VEVENT", "END:VCALENDAR",
+    ].join("\r\n");
+    return "data:text/calendar;charset=utf-8," + encodeURIComponent(ics);
   }
 
   /* -- step 3: confirmation ------------------------------------------- */
@@ -214,7 +246,17 @@
       <div class="confirm-hero">
         <div class="confirm-check">${I('checkbig')}</div>
         <h2>Call confirmed</h2>
-        <p class="sub">${day.date} · ${slot.cet} CET / ${slot.cst} CST · 30 minutes · video link sent to your inbox</p>
+        <p class="sub">${day.date} · ${slot.cet} CET / ${slot.cst} CST · 30 minutes</p>
+      </div>
+
+      <div class="teams-block">
+        <div class="tb-icn">${I('video')}</div>
+        <div style="flex:1;min-width:0">
+          <b>Microsoft Teams meeting</b>
+          <div class="muted" style="font-size:13px;margin-top:2px">Invite sent to <b>${b.email || 'your inbox'}</b> and added to ${exp.name}'s Outlook calendar.</div>
+          <a href="#" class="link tb-join" style="font-size:13px;display:inline-block;margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">teams.microsoft.com/l/meetup-join/moov-${day.iso}-${slot.cet.replace(':','')}…</a>
+        </div>
+        <a class="btn btn-ghost btn-sm" style="flex:none" href="${bookingIcs(b, exp, day, slot)}" download="moov-intro-call.ics">${I('calendar','i-sm')} Add to calendar</a>
       </div>
 
       <div class="expert-card ${team}">
@@ -249,8 +291,10 @@
     const b = MOOV.booking;
     if (b.step === 1) {
       const company = el("f-company");
-      const refreshNext = () => { const btn = el("to-step2"); if (btn) btn.disabled = !el("f-company").value.trim(); };
+      const refreshNext = () => { const btn = el("to-step2"); if (btn) btn.disabled = !(el("f-company").value.trim() && emailOk(el("f-email").value)); };
       company && company.addEventListener("input", (e) => { b.company = e.target.value; refreshNext(); });
+      const email = el("f-email");
+      email && email.addEventListener("input", (e) => { b.email = e.target.value; refreshNext(); });
       const bindText = (id, key) => { const n = el(id); n && n.addEventListener("input", (e) => (b[key] = e.target.value)); };
       bindText("f-origin", "origin"); bindText("f-dest", "dest");
       const vol = el("f-volume"); vol && vol.addEventListener("change", (e) => (b.volume = e.target.value));
@@ -280,11 +324,14 @@
       bindSlots();
       el("back-step1") && el("back-step1").addEventListener("click", () => { b.step = 1; render(); });
       el("to-step3") && el("to-step3").addEventListener("click", () => {
-        // the confirmed slot lands in the assigned expert's schedule
+        // the confirmed slot lands in the assigned expert's Outlook calendar
         MOOV.schedule[bookingTeam()].entries[b.day + "|" + b.slot] =
-          { state: "booked", with: b.company || "New prospect", type: "Intro call", isNew: true };
+          { state: "booked", with: b.company || "New prospect", type: "Intro call", teams: true, isNew: true };
         b.step = 3; render();
       });
+    } else if (b.step === 3) {
+      const join = $(".tb-join");
+      join && join.addEventListener("click", (e) => { e.preventDefault(); toast("Prototype — the Teams meeting would open here"); });
     }
   }
   function bindSlots() {
@@ -1115,11 +1162,13 @@
   function viewOpsSchedule() {
     const expKey = MOOV.session.expert || "strategic";
     const exp = MOOV.experts[expKey];
-    const entries = MOOV.schedule[expKey].entries;
-    const total = MOOV.slotDays.length * MOOV.slotTimes.length;
-    const booked = Object.values(entries).filter((e) => e.state === "booked").length;
-    const blocked = Object.values(entries).filter((e) => e.state === "blocked").length;
-    const open = total - booked - blocked;
+    const cal = MOOV.calendars[expKey];
+    let booked = 0, blocked = 0, busy = 0, open = 0;
+    MOOV.slotDays.forEach((d) => MOOV.slotTimes.forEach((t) => {
+      const st = MOOV.slotState(expKey, d.iso, t.cet).state;
+      if (st === "booked") booked++; else if (st === "blocked") blocked++;
+      else if (st === "busy") busy++; else open++;
+    }));
 
     const headRow = `<div class="sched-corner">
         <div style="font-weight:700;font-size:12.5px">CET</div>
@@ -1135,15 +1184,20 @@
     const rows = MOOV.slotTimes.map((t) => {
       const cells = MOOV.slotDays.map((d) => {
         const key = d.iso + "|" + t.cet;
-        const e = entries[key];
-        if (e && e.state === "booked") {
+        const e = MOOV.slotState(expKey, d.iso, t.cet);
+        if (e.state === "booked") {
           return `<button class="sched-cell booked ${e.isNew?'isnew':''}" data-key="${key}" title="Booked calls can't be blocked here">
-            ${I('lock','i-sm')} <div class="sc-t">${e.with}</div><div class="sc-s">${e.type}${e.isNew?' · just booked':''}</div>
+            ${I('lock','i-sm')} <div class="sc-t">${e.with}</div><div class="sc-s">${e.type}${e.teams?' · Teams':''}${e.isNew?' · just booked':''}</div>
           </button>`;
         }
-        if (e && e.state === "blocked") {
+        if (e.state === "blocked") {
           return `<button class="sched-cell blocked" data-key="${key}" title="Click to reopen this slot">
             <div class="sc-t">Blocked</div><div class="sc-s">${e.reason || 'Unavailable'}</div>
+          </button>`;
+        }
+        if (e.state === "busy") {
+          return `<button class="sched-cell busy" data-key="${key}" title="Synced from your Outlook calendar">
+            ${I('calendar','i-sm')} <div class="sc-t">${e.title}</div><div class="sc-s">Outlook · auto-blocked</div>
           </button>`;
         }
         return `<button class="sched-cell free" data-key="${key}" title="Click to block this slot">
@@ -1152,6 +1206,25 @@
       }).join("");
       return `<div class="sched-time"><div style="font-weight:700">${t.cet}</div><div class="subtle" style="font-size:11.5px">${t.cst}</div></div>${cells}`;
     }).join("");
+
+    const calPanel = cal.connected ? `
+      <div class="cal-connect on">
+        <div class="cc-icn">${I('calendar')}</div>
+        <div style="flex:1">
+          <b><span class="cc-dot"></span> ${cal.provider} connected</b>
+          <div class="muted" style="font-size:13px">${cal.account} · Outlook &amp; Teams · last synced ${cal.lastSync}. Meetings auto-block your bookable slots — titles are never shown to prospects.</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" id="cal-sync">${I('trend','i-sm')} Sync now</button>
+        <button class="btn btn-ghost btn-sm" id="cal-toggle">Disconnect</button>
+      </div>` : `
+      <div class="cal-connect">
+        <div class="cc-icn off">${I('calendar')}</div>
+        <div style="flex:1">
+          <b>Calendar not connected</b>
+          <div class="muted" style="font-size:13px">Connect ${cal.provider} to auto-block slots when you have Outlook or Teams meetings — no manual upkeep, no double-booking.</div>
+        </div>
+        <button class="btn btn-primary btn-sm" id="cal-toggle">${I('zap','i-sm')} Connect ${cal.provider}</button>
+      </div>`;
 
     const body = `
       <div class="page-head" style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap">
@@ -1164,10 +1237,12 @@
           <option value="freight" ${expKey==='freight'?'selected':''}>Hao Lin — Freight desk</option>
         </select>
       </div>
-      <div class="mini-stats">
+      ${calPanel}
+      <div class="mini-stats" style="grid-template-columns:repeat(4,1fr)">
         <div class="mini-stat"><div class="ms-k">Booked calls this week</div><div class="ms-v">${booked}</div></div>
         <div class="mini-stat"><div class="ms-k">Open to prospects</div><div class="ms-v" style="color:var(--success)">${open}</div></div>
-        <div class="mini-stat"><div class="ms-k">Blocked</div><div class="ms-v">${blocked}</div></div>
+        <div class="mini-stat"><div class="ms-k">Outlook busy</div><div class="ms-v" style="color:#6a4dff">${busy}</div></div>
+        <div class="mini-stat"><div class="ms-k">Blocked by you</div><div class="ms-v">${blocked}</div></div>
       </div>
       <div class="panel">
         <div class="p-head">
@@ -1175,13 +1250,14 @@
           <div class="lane-legend">
             <span><i style="background:var(--success)"></i> Available</span>
             <span><i style="background:var(--blue-500)"></i> Booked</span>
+            <span><i style="background:#6a4dff"></i> Outlook busy</span>
             <span><i style="background:var(--ink-3)"></i> Blocked</span>
           </div>
         </div>
         <div class="sched-grid">${headRow}${rows}</div>
         <div class="route-hint freight" style="margin-top:18px">
           <div class="rh-icn">${I('zap','i-sm')}</div>
-          <div><b>Changes go live instantly</b><span class="muted">Block a slot and it disappears from the booking page; new prospect bookings appear here the moment they confirm. <a class="link" href="#/book">Try the booking page →</a></span></div>
+          <div><b>Your bookable slots are calculated automatically</b><span class="muted">Working hours (08:30–14:30 CET), minus your Outlook/Teams meetings, minus anything you block by hand. Prospect bookings drop straight into your calendar with a Teams link. <a class="link" href="#/book">Try the booking page →</a></span></div>
         </div>
       </div>`;
     return opsShell("schedule", "My schedule", `<a href="#/ops">Operations console</a>`, body);
@@ -1393,29 +1469,41 @@
       });
     }
 
-    // ops schedule: availability toggles
+    // ops schedule: availability toggles + calendar connection
     if (route.name === "opsSchedule") {
       const expKey = MOOV.session.expert || "strategic";
       const entries = MOOV.schedule[expKey].entries;
+      const cal = MOOV.calendars[expKey];
+      const stateOf = (key) => MOOV.slotState(expKey, key.split("|")[0], key.split("|")[1]).state;
       $$(".sched-cell").forEach((c) => c.addEventListener("click", () => {
         const key = c.dataset.key;
-        const e = entries[key];
-        if (e && e.state === "booked") { toast("Booked calls can't be blocked — reschedule with the prospect first"); return; }
-        if (e && e.state === "blocked") { delete entries[key]; render(); toast("Slot reopened — visible on the booking page"); }
+        const st = stateOf(key);
+        if (st === "booked") { toast("Booked calls can't be blocked — reschedule with the prospect first"); return; }
+        if (st === "busy") { toast("Synced from Outlook — manage this meeting in your own calendar"); return; }
+        if (st === "blocked") { delete entries[key]; render(); toast("Slot reopened — visible on the booking page"); }
         else { entries[key] = { state: "blocked", reason: "Blocked by you" }; render(); toast("Slot blocked — hidden from the booking page"); }
       }));
       $$(".sched-day").forEach((d) => d.addEventListener("click", () => {
         const iso = d.dataset.day;
         const dayKeys = MOOV.slotTimes.map((t) => iso + "|" + t.cet);
-        const anyFree = dayKeys.some((k) => !entries[k]);
+        const anyFree = dayKeys.some((k) => stateOf(k) === "free");
         if (anyFree) {
-          dayKeys.forEach((k) => { if (!entries[k]) entries[k] = { state: "blocked", reason: "Out of office" }; });
+          dayKeys.forEach((k) => { if (stateOf(k) === "free") entries[k] = { state: "blocked", reason: "Out of office" }; });
           render(); toast("Day blocked (booked calls kept) — hidden from the booking page");
         } else {
           dayKeys.forEach((k) => { if (entries[k] && entries[k].state === "blocked") delete entries[k]; });
           render(); toast("Day reopened — visible on the booking page");
         }
       }));
+      const sync = el("cal-sync");
+      sync && sync.addEventListener("click", () => { cal.lastSync = "just now"; render(); toast("Outlook calendar synced — no new conflicts"); });
+      const calToggle = el("cal-toggle");
+      calToggle && calToggle.addEventListener("click", () => {
+        cal.connected = !cal.connected;
+        if (cal.connected) cal.lastSync = "just now";
+        render();
+        toast(cal.connected ? "Microsoft 365 connected — Outlook meetings now auto-block slots" : "Disconnected — Outlook meetings no longer block bookings");
+      });
       const sel = el("sched-expert");
       sel && sel.addEventListener("change", () => { MOOV.session.expert = sel.value; render(); });
     }

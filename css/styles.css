@@ -761,3 +761,36 @@ a.kpi:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-
 @media (max-width: 960px) {
   .sched-grid { min-width: 640px; }
 }
+
+/* =====================================================================
+   V4 — calendar sync (Microsoft 365) + Teams booking
+   ===================================================================== */
+.cal-connect {
+  display: flex; gap: 15px; align-items: center; flex-wrap: wrap;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg);
+  padding: 16px 20px; margin-bottom: 18px;
+}
+.cal-connect .cc-icn {
+  width: 44px; height: 44px; border-radius: 12px; flex: none; display: grid; place-items: center;
+  background: #f3f0ff; color: #6a4dff;
+}
+.cal-connect .cc-icn.off { background: var(--canvas-2); color: var(--ink-3); }
+.cal-connect .cc-dot {
+  display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+  background: var(--success); margin-right: 4px;
+  box-shadow: 0 0 0 3px var(--success-bg);
+}
+.sched-cell.busy {
+  background: #f3f0ff; border: 1px solid #cfc2f5; color: #443787; cursor: default;
+}
+.sched-cell.busy .i { position: absolute; top: 9px; right: 10px; width: 14px; height: 14px; color: #6a4dff; }
+.sched-cell.busy .sc-s { color: #6a4dff; }
+.teams-block {
+  display: flex; gap: 15px; align-items: center; flex-wrap: wrap;
+  border: 1px solid #d6ccf5; background: #f6f4ff; border-radius: var(--r-lg);
+  padding: 17px 20px; margin-top: 22px;
+}
+.teams-block .tb-icn {
+  width: 46px; height: 46px; border-radius: 12px; flex: none; display: grid; place-items: center;
+  background: #6a4dff; color: #fff;
+}

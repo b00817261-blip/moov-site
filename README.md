@@ -92,6 +92,17 @@ A "Demo: switch view" link in each sidebar jumps between the two.
   public "Book a call" slot picker** — blocking a slot hides it from
   prospects instantly, and a new prospect booking appears in the calendar the
   moment it's confirmed (highlighted "just booked").
+- **Calendar sync (simulated Microsoft 365)** — each expert has a "connected"
+  work calendar; Outlook/Teams meetings appear as purple *auto-blocked* cells
+  and are removed from the public picker (titles are never shown to
+  prospects). Sync now / disconnect / reconnect all work in-demo. Bookable
+  slots = working hours − Outlook busy − manual blocks.
+- **Teams-native bookings** — the public flow collects the prospect's work
+  email, and the confirmation shows a Teams meeting link, notes the invite
+  went to both calendars, and offers a **real downloadable .ics invite**
+  (correct UTC times). In production this is the Microsoft Graph API:
+  read free/busy, create the Outlook event with a Teams link, email invites
+  to both parties.
 
 ## Project structure
 
