@@ -826,3 +826,83 @@ a.kpi:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-
 .exp-card .ec-langs span { font-size: 11px; font-weight: 600; background: var(--canvas-2); color: var(--ink-2); border-radius: 999px; padding: 2px 8px; }
 .exp-card .ec-free { font-size: 12px; font-weight: 700; color: var(--success); margin-top: 10px; }
 .exp-card.sel .ec-free::after { content: " · selected"; color: var(--blue-500); }
+
+/* ================================================================
+   FREE QUOTE SIMULATOR (#/quote)
+   ================================================================ */
+
+/* floating side tab — the "Get a Free Quote" entry point */
+.fq-tab {
+  position: fixed; right: 0; top: 45%; z-index: 80;
+  writing-mode: vertical-rl;
+  background: var(--blue-500); color: #fff;
+  font-weight: 800; font-size: 14px; letter-spacing: .04em;
+  padding: 18px 12px; border-radius: 12px 0 0 12px;
+  box-shadow: -6px 8px 24px rgba(46,107,255,.35);
+  transition: all .15s;
+}
+.fq-tab:hover { background: var(--blue-400); padding-right: 18px; }
+
+/* promo card on the login hero (dark panel) */
+.quote-promo {
+  margin-top: 28px; padding: 20px 22px; border-radius: 16px;
+  background: rgba(46,107,255,.18); border: 1px solid rgba(77,132,255,.45);
+  position: relative; z-index: 2; max-width: 380px;
+}
+.quote-promo b { display: flex; align-items: center; gap: 8px; font-size: 16px; color: #fff; }
+.quote-promo p { font-size: 13.5px !important; color: #c6d4ea; margin: 8px 0 14px !important; max-width: none !important; }
+
+/* progress bar above the question card (sits on the dark hero) */
+.qz-progress { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
+.qz-progress .qp-lbl { font-size: 12.5px; font-weight: 700; color: #c6d4ea; white-space: nowrap; }
+.qz-progress .track { flex: 1; height: 6px; border-radius: 99px; background: rgba(255,255,255,.22); overflow: hidden; }
+.qz-progress .fill { height: 100%; border-radius: 99px; background: var(--teal-500); transition: width .35s ease; }
+
+/* answer option cards */
+.qz-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 22px; }
+.qz-opt {
+  display: flex; align-items: center; gap: 14px; text-align: left;
+  padding: 15px 16px; border: 1.5px solid var(--line); border-radius: var(--r-lg);
+  background: #fff; font-family: inherit; transition: all .13s; cursor: pointer;
+}
+.qz-opt:hover { border-color: var(--blue-400); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+.qz-opt.sel { border-color: var(--blue-500); background: var(--blue-050); box-shadow: 0 0 0 3px rgba(46,107,255,.12); }
+.qz-opt .qo-icn {
+  width: 42px; height: 42px; border-radius: 12px; flex: none;
+  background: var(--blue-050); color: var(--blue-500);
+  display: grid; place-items: center; transition: all .13s;
+}
+.qz-opt.sel .qo-icn { background: var(--blue-500); color: #fff; }
+.qz-opt .qo-l { font-weight: 700; font-size: 15px; letter-spacing: -.01em; }
+.qz-opt .qo-s { font-size: 12.5px; color: var(--ink-3); margin-top: 2px; }
+.qz-opt .qo-tick {
+  margin-left: auto; width: 22px; height: 22px; border-radius: 50%; flex: none;
+  background: var(--blue-500); color: #fff; display: grid; place-items: center;
+  opacity: 0; transform: scale(.5); transition: all .15s;
+}
+.qz-opt.sel .qo-tick { opacity: 1; transform: scale(1); }
+
+/* result: the estimated range */
+.qz-range { text-align: center; padding: 10px 0 4px; }
+.qz-range .qr-kicker {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 13px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+  color: var(--blue-500);
+}
+.qz-range .r { font-size: clamp(32px, 5vw, 46px); font-weight: 800; letter-spacing: -.03em; color: var(--navy-800); margin-top: 8px; }
+.qz-range .qr-sub { color: var(--ink-3); font-size: 14.5px; margin-top: 6px; }
+.qz-notes { display: flex; flex-direction: column; gap: 6px; margin-top: 16px; }
+.qz-notes span { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); }
+.qz-notes .i { color: var(--blue-500); flex: none; }
+
+/* email capture card */
+.qz-email {
+  margin-top: 24px; padding: 22px 24px; border-radius: var(--r-lg);
+  background: var(--blue-050); border: 1.5px solid rgba(46,107,255,.35);
+}
+.qz-email h3 { font-size: 17px; letter-spacing: -.01em; }
+
+@media (max-width: 640px) {
+  .qz-opts { grid-template-columns: 1fr; }
+  .fq-tab { font-size: 13px; padding: 14px 10px; }
+}

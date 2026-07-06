@@ -626,6 +626,117 @@ MOOV.bookingRequests = [
 ];
 
 /* =====================================================================
+   FREE QUOTE SIMULATOR — question options & indicative pricing model
+   Rates are fictional demo numbers; the simulator returns a RANGE, and a
+   MOOV specialist recontacts the prospect with a firm offer.
+   ===================================================================== */
+MOOV.quoteConfig = {
+  modes: [
+    { id: "fcl", icon: "ship", label: "Ocean — full container", sub: "FCL · your own 40' container(s)", transit: "28–35 days" },
+    { id: "lcl", icon: "box", label: "Ocean — shared container", sub: "LCL · pay only for the space you use", transit: "30–40 days" },
+    { id: "air", icon: "plane", label: "Air freight", sub: "Fast uplift for urgent or high-value cargo", transit: "4–7 days" },
+    { id: "rail", icon: "train", label: "Rail freight", sub: "China–Europe corridor · between ocean and air", transit: "16–20 days" },
+    { id: "unsure", icon: "life", label: "Not sure yet", sub: "We'll estimate ocean freight — the most common pick", transit: "28–35 days" },
+  ],
+  origins: [
+    { id: "Shanghai", adj: 1.0 },
+    { id: "Ningbo", adj: 0.97 },
+    { id: "Shenzhen", adj: 1.05 },
+    { id: "Other China", adj: 1.09 },
+  ],
+  dests: [
+    { id: "Hamburg", adj: 1.0 },
+    { id: "Rotterdam", adj: 0.98 },
+    { id: "Other Europe", adj: 1.07 },
+  ],
+  /* size options per mode family; qty feeds the price model */
+  sizes: {
+    fcl: [
+      { id: "1x40", label: "1 × 40'", sub: "≈ 67 cbm", qty: 1 },
+      { id: "2x40", label: "2 × 40'", qty: 2 },
+      { id: "3x40", label: "3 × 40'", qty: 3 },
+      { id: "5x40", label: "4–6 × 40'", qty: 5 },
+      { id: "8x40", label: "7+ × 40'", sub: "programme volume", qty: 8 },
+    ],
+    lcl: [
+      { id: "cbm2", label: "1–3 cbm", sub: "a few pallets", qty: 2 },
+      { id: "cbm5", label: "4–7 cbm", qty: 5 },
+      { id: "cbm10", label: "8–14 cbm", qty: 10 },
+      { id: "cbm18", label: "15+ cbm", sub: "FCL may be cheaper", qty: 18 },
+    ],
+    air: [
+      { id: "kg80", label: "Under 100 kg", qty: 80 },
+      { id: "kg300", label: "100–500 kg", qty: 300 },
+      { id: "kg1200", label: "500 kg – 2 t", qty: 1200 },
+      { id: "kg3000", label: "Over 2 t", sub: "consider sea–air", qty: 3000 },
+    ],
+  },
+  /* € per unit: FCL/rail per 40', LCL per cbm, air per kg */
+  baseRates: { fcl: 2750, lcl: 92, air: 4.3, rail: 5400, unsure: 2750 },
+  minCharge: { lcl: 420, air: 950 },
+  frequencies: [
+    { id: "once", label: "One-off shipment", mult: 1.0 },
+    { id: "fewyear", label: "A few times a year", mult: 1.0 },
+    { id: "monthly", label: "Monthly", sub: "programme pricing", mult: 0.95 },
+    { id: "weekly", label: "Weekly or more", sub: "programme pricing", mult: 0.93 },
+  ],
+  extras: [
+    { id: "customs", label: "Customs clearance", price: 340, perBox: false },
+    { id: "insurance", label: "Cargo insurance", price: 190, perBox: false },
+    { id: "door", label: "Door delivery in Europe", price: 380, perBox: true },
+    { id: "warehouse", label: "Warehousing / storage", price: 260, perBox: false },
+  ],
+  timings: [
+    { id: "asap", label: "As soon as possible", sub: "cargo ready within 2 weeks", mult: 1.12 },
+    { id: "soon", label: "In 2–6 weeks", sub: "standard planning window", mult: 1.0 },
+    { id: "flex", label: "I'm flexible", sub: "we pick the best rate window", mult: 0.96 },
+  ],
+};
+MOOV.quoteSizeFamily = (mode) => (mode === "lcl" || mode === "air" ? mode : "fcl");
+
+/* Turn the answers into an indicative all-in range + breakdown --------- */
+MOOV.quoteEstimate = function (q) {
+  const cfg = MOOV.quoteConfig;
+  const mode = cfg.modes.find((m) => m.id === q.mode) || cfg.modes[0];
+  const fam = MOOV.quoteSizeFamily(q.mode);
+  const size = cfg.sizes[fam].find((s) => s.id === q.size) || cfg.sizes[fam][0];
+  const origin = cfg.origins.find((o) => o.id === q.origin) || cfg.origins[0];
+  const dest = cfg.dests.find((d) => d.id === q.dest) || cfg.dests[0];
+  const freq = cfg.frequencies.find((f) => f.id === q.frequency) || cfg.frequencies[0];
+  const timing = cfg.timings.find((t) => t.id === q.timing) || cfg.timings[1];
+
+  let freight = cfg.baseRates[q.mode || "fcl"] * size.qty * origin.adj * dest.adj;
+  const min = cfg.minCharge[q.mode];
+  if (min && freight < min) freight = min;
+  freight = freight * freq.mult * timing.mult;
+
+  /* "boxes" for per-container extras — LCL/air count as one consignment */
+  const boxes = fam === "fcl" ? size.qty : 1;
+  const breakdown = [{ label: mode.label + " · " + size.label, amount: freight }];
+  (q.extras || []).forEach((id) => {
+    const x = cfg.extras.find((e) => e.id === id);
+    if (x) breakdown.push({ label: x.label, amount: x.price * (x.perBox ? boxes : 1) });
+  });
+  const total = breakdown.reduce((a, b) => a + b.amount, 0);
+  const r50 = (n) => Math.round(n / 50) * 50;
+  return {
+    low: r50(total * 0.9),
+    high: r50(total * 1.12),
+    transit: mode.transit,
+    breakdown: breakdown.map((b) => ({ label: b.label, amount: r50(b.amount) })),
+    notes: [
+      freq.mult < 1 ? "Programme pricing applied for recurring volume." : null,
+      timing.mult > 1 ? "Peak surcharge included for a departure inside 2 weeks." : null,
+      timing.mult < 1 ? "Flexible-window saving applied." : null,
+      q.mode === "unsure" ? "Estimated as ocean freight — your specialist will confirm the best mode." : null,
+    ].filter(Boolean),
+  };
+};
+
+/* Submitted quote leads — surfaced in the MOOV Ops action queue -------- */
+MOOV.quoteLeads = [];
+
+/* =====================================================================
    OPS ACTION QUEUE (internal side)
    ===================================================================== */
 MOOV.opsQueue = [

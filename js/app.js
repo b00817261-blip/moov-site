@@ -89,6 +89,7 @@
         <div class="card">${inner}</div>
       </div>
     </div>
+    ${quoteTab()}
     <div class="toast" id="toast"></div>`);
   }
 
@@ -445,6 +446,265 @@
   }
 
   /* =====================================================================
+     VIEW: FREE QUOTE SIMULATOR
+     One question per screen (mix of option cards, chips and free inputs),
+     ends on an indicative price range + email capture → MOOV recontacts.
+     ===================================================================== */
+  const QZ_QUESTIONS = 7;
+  function quoteReset() {
+    MOOV.quoteSim = {
+      step: 0, mode: "", origin: "", dest: "", size: "", commodity: "",
+      frequency: "", extras: [], timing: "", name: "", company: "", email: "", submitted: false,
+    };
+  }
+  if (!MOOV.quoteSim) quoteReset();
+
+  /* floating side entry point, shown on the public pages */
+  function quoteTab() {
+    return `<a class="fq-tab" href="#/quote" title="Get an instant price range">Get a Free Quote</a>`;
+  }
+
+  function qzCard(attr, value, selected, icon, label, sub) {
+    return `<button type="button" class="qz-opt ${selected ? 'sel' : ''}" data-${attr}="${value}">
+      ${icon ? `<div class="qo-icn">${I(icon)}</div>` : ""}
+      <div><div class="qo-l">${label}</div>${sub ? `<div class="qo-s">${sub}</div>` : ""}</div>
+      <span class="qo-tick">${I('check','i-sm')}</span>
+    </button>`;
+  }
+  function qzHead(title, sub) {
+    return `<h2>${title}</h2>${sub ? `<p class="sub">${sub}</p>` : ""}`;
+  }
+  function qzNav(opts) {
+    opts = opts || {};
+    const q = MOOV.quoteSim;
+    return `<div class="card-actions">
+      ${q.step > 0 ? `<button class="btn btn-ghost" id="qz-back">${I('chevleft','i-sm')} Back</button>` : `<a class="btn btn-ghost" href="#/">Cancel</a>`}
+      ${opts.next ? `<button class="btn btn-primary" id="qz-next" ${opts.disabled ? 'disabled' : ''}>${opts.next} ${I('arrow','i-sm')}</button>` : `<span class="muted" style="font-size:13px;align-self:center">${I('info','i-sm')} Pick an option to continue</span>`}
+    </div>`;
+  }
+
+  function quoteStep() {
+    const q = MOOV.quoteSim;
+    const cfg = MOOV.quoteConfig;
+    if (q.step === 0) {
+      return qzHead("How would you like to ship?", "No wrong answer — pick “Not sure yet” and we'll estimate the most common option.") +
+        `<div class="qz-opts">${cfg.modes.map((m) => qzCard("mode", m.id, q.mode === m.id, m.icon, m.label, m.sub)).join("")}</div>` + qzNav();
+    }
+    if (q.step === 1) {
+      const chips = (list, group, sel) => list.map((o) =>
+        `<button type="button" class="choice ${sel === o.id ? 'sel' : ''}" data-${group}="${o.id}"><span class="tick">${I('check','i-sm')}</span>${o.id}</button>`).join("");
+      return qzHead("Where is it going?", "Pick the nearest port on each end — your specialist fine-tunes the exact routing.") +
+        `<div class="field"><label>From (origin)</label><div class="choices" id="qz-origin">${chips(cfg.origins, "origin", q.origin)}</div></div>
+         <div class="field"><label>To (destination)</label><div class="choices" id="qz-dest">${chips(cfg.dests, "dest", q.dest)}</div></div>` +
+        qzNav({ next: "Next", disabled: !(q.origin && q.dest) });
+    }
+    if (q.step === 2) {
+      const fam = MOOV.quoteSizeFamily(q.mode);
+      const title = fam === "air" ? "Roughly how heavy is the shipment?" : fam === "lcl" ? "Roughly how much space do you need?" : "How many containers are we moving?";
+      return qzHead(title, "A rough bracket is enough for the estimate.") +
+        `<div class="qz-opts">${cfg.sizes[fam].map((s) => qzCard("size", s.id, q.size === s.id, "", s.label, s.sub)).join("")}</div>` + qzNav();
+    }
+    if (q.step === 3) {
+      return qzHead("What are you shipping?", "This helps us route you to the right specialist.") +
+        `<div class="choices" id="qz-commodity" style="margin-top:20px">${MOOV.shipOptions.map((o) =>
+          `<button type="button" class="choice ${q.commodity === o ? 'sel' : ''}" data-commodity="${o}"><span class="tick">${I('check','i-sm')}</span>${o}</button>`).join("")}</div>` + qzNav();
+    }
+    if (q.step === 4) {
+      return qzHead("How often will you ship this lane?", "Recurring volume unlocks programme pricing.") +
+        `<div class="qz-opts">${cfg.frequencies.map((f) => qzCard("freq", f.id, q.frequency === f.id, "", f.label, f.sub)).join("")}</div>` + qzNav();
+    }
+    if (q.step === 5) {
+      return qzHead("Any extras to include?", "Select all that apply — or skip straight to your estimate.") +
+        `<div class="qz-opts">${cfg.extras.map((x) => qzCard("extra", x.id, q.extras.includes(x.id), "", x.label, "from €" + x.price)).join("")}</div>` +
+        qzNav({ next: q.extras.length ? "Next" : "Skip" });
+    }
+    /* step 6 */
+    return qzHead("When does it need to move?", "Timing moves the price — flexibility earns you the best rate window.") +
+      `<div class="qz-opts">${cfg.timings.map((t) => qzCard("timing", t.id, q.timing === t.id, "", t.label, t.sub)).join("")}</div>` + qzNav();
+  }
+
+  function quoteResult() {
+    const q = MOOV.quoteSim;
+    const est = MOOV.quoteEstimate(q);
+    if (q.submitted) {
+      return `
+        <div class="confirm-hero">
+          <div class="confirm-check">${I('checkbig')}</div>
+          <h2>Request received</h2>
+          <p class="sub">Your estimate and answers are with the MOOV freight desk.</p>
+        </div>
+        <div class="route-hint freight" style="margin-top:22px">
+          <div class="rh-icn">${I('users','i-sm')}</div>
+          <div><b>A MOOV specialist will recontact you within 1 business day</b>
+          <span class="muted">We'll email <b>${q.email}</b> with a firm, bookable quote for ${q.origin} → ${q.dest} — no commitment on your side.</span></div>
+        </div>
+        <div class="summary-list">
+          <div class="row"><span class="k">Your indicative range</span><span class="v">${eur(est.low)} – ${eur(est.high)}</span></div>
+          <div class="row"><span class="k">Typical transit</span><span class="v">${est.transit}</span></div>
+          <div class="row"><span class="k">We'll reply to</span><span class="v">${q.email}</span></div>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-ghost" id="qz-again">Start another estimate</button>
+          <a class="btn btn-primary" href="#/book">Prefer to talk? Book a call ${I('arrow','i-sm')}</a>
+        </div>`;
+    }
+    const fam = MOOV.quoteSizeFamily(q.mode);
+    const size = MOOV.quoteConfig.sizes[fam].find((s) => s.id === q.size);
+    const modeLabel = (MOOV.quoteConfig.modes.find((m) => m.id === q.mode) || {}).label || "";
+    const rows = est.breakdown.map((b) => `<div class="row"><span class="k">${b.label}</span><span class="v tabular">${eur(b.amount)}</span></div>`).join("");
+    return `
+      <div class="qz-range">
+        <div class="qr-kicker">${I('zap','i-sm')} Your indicative all-in range</div>
+        <div class="r tabular">${eur(est.low)} – ${eur(est.high)}</div>
+        <div class="qr-sub">${modeLabel} · ${q.origin} → ${q.dest} · typical transit <b>${est.transit}</b></div>
+      </div>
+      ${est.notes.length ? `<div class="qz-notes">${est.notes.map((n) => `<span>${I('info','i-sm')} ${n}</span>`).join("")}</div>` : ""}
+      <div class="summary-list">
+        ${rows}
+        <div class="row"><span class="k" style="font-weight:700;color:var(--ink)">Estimated midpoint</span><span class="v tabular">${eur(Math.round((est.low + est.high) / 2 / 50) * 50)}</span></div>
+      </div>
+      <p class="muted" style="font-size:12.5px;margin-top:10px">${I('shield','i-sm')} Indicative range based on current market rates for ${size ? size.label : 'your load'} — not a binding offer. Your firm quote comes from a specialist.</p>
+
+      <div class="qz-email">
+        <h3>Get your exact quote — free, within 1 business day</h3>
+        <p class="muted" style="font-size:13.5px;margin-top:4px">Leave your email and a MOOV specialist recontacts you with a firm, bookable price for this exact shipment.</p>
+        <div class="field-row">
+          <div class="field"><label>Your name</label><input class="input" id="qz-name" placeholder="e.g. Anna Weber" value="${q.name || ''}"></div>
+          <div class="field"><label>Company <span class="muted" style="font-weight:500">(optional)</span></label><input class="input" id="qz-company" placeholder="e.g. Weber Imports" value="${q.company || ''}"></div>
+        </div>
+        <div class="field"><label>Work email <span class="req">*</span></label><input class="input" id="qz-mail" type="email" placeholder="you@company.com" value="${q.email || ''}"></div>
+        <button class="btn btn-primary btn-block" id="qz-submit" style="margin-top:18px" ${emailOk(q.email) ? '' : 'disabled'}>${I('check','i-sm')} Send me the exact quote</button>
+        <p class="muted" style="font-size:12px;margin-top:10px">${I('lock','i-sm')} Used only to send your quote and follow up — no newsletters, no spam.</p>
+      </div>
+      <div class="card-actions">
+        <button class="btn btn-ghost" id="qz-back">${I('chevleft','i-sm')} Back</button>
+        <button class="btn btn-ghost" id="qz-edit">Adjust my answers</button>
+      </div>`;
+  }
+
+  function viewQuote() {
+    const q = MOOV.quoteSim;
+    const onResult = q.step >= QZ_QUESTIONS;
+    const pct = q.submitted ? 100 : Math.round((Math.min(q.step, QZ_QUESTIONS) / QZ_QUESTIONS) * 100);
+    const hero = q.submitted
+      ? { t: "You're all set.", p: "A MOOV specialist takes it from here." }
+      : onResult
+      ? { t: "Here's your estimate.", p: "An instant range now — a firm quote from a real specialist within 1 business day." }
+      : { t: "Get a free quote", p: "7 quick questions, an instant price range, zero commitment." };
+    return h(`
+    <header class="nav"><div class="wrap nav-inner">
+      <a class="brand" href="#/">${logoMark()} MOOV</a>
+      <span class="chip">${I('zap','i-sm')} Free quote — about 2 minutes</span>
+      <div class="nav-spacer"></div>
+      <a class="btn btn-ghost btn-sm" href="#/book">${I('calendar','i-sm')} Book a call instead</a>
+    </div></header>
+    <div class="book">
+      <div class="book-hero"><div class="wrap">
+        <a class="back-link" href="#/" style="color:#9fb2d0;margin-bottom:18px">${I('chevleft','i-sm')} Back to sign in</a>
+        <h1>${hero.t}</h1>
+        <p>${hero.p}</p>
+      </div></div>
+      <div class="book-shell">
+        <div class="qz-progress">
+          <span class="qp-lbl">${onResult ? (q.submitted ? "Done" : "Your estimate") : `Question ${q.step + 1} of ${QZ_QUESTIONS}`}</span>
+          <div class="track"><div class="fill" style="width:${pct}%"></div></div>
+          <span class="qp-lbl">${pct}%</span>
+        </div>
+        <div class="card">${onResult ? quoteResult() : quoteStep()}</div>
+      </div>
+    </div>
+    <div class="toast" id="toast"></div>`);
+  }
+
+  function bindQuote() {
+    const q = MOOV.quoteSim;
+    const advance = () => setTimeout(() => { q.step = Math.min(q.step + 1, QZ_QUESTIONS); render(); }, 240);
+    const back = el("qz-back");
+    back && back.addEventListener("click", () => { q.step = Math.max(0, q.step - 1); render(); });
+
+    /* single-choice option cards: select, flash, auto-advance */
+    const single = (attr, key) => {
+      $$(`.qz-opt[data-${attr}]`).forEach((c) => c.addEventListener("click", () => {
+        q[key] = c.dataset[attr];
+        $$(`.qz-opt[data-${attr}]`).forEach((x) => x.classList.toggle("sel", x.dataset[attr] === q[key]));
+        advance();
+      }));
+    };
+
+    if (q.step === 0) {
+      $$(".qz-opt[data-mode]").forEach((c) => c.addEventListener("click", () => {
+        const prevFam = q.mode ? MOOV.quoteSizeFamily(q.mode) : null;
+        q.mode = c.dataset.mode;
+        if (prevFam && MOOV.quoteSizeFamily(q.mode) !== prevFam) q.size = "";
+        $$(".qz-opt[data-mode]").forEach((x) => x.classList.toggle("sel", x.dataset.mode === q.mode));
+        advance();
+      }));
+    } else if (q.step === 1) {
+      const pick = (root, attr, key) => $$(root + " .choice").forEach((c) => c.addEventListener("click", () => {
+        q[key] = c.dataset[attr];
+        $$(root + " .choice").forEach((x) => x.classList.toggle("sel", x.dataset[attr] === q[key]));
+        const btn = el("qz-next"); if (btn) btn.disabled = !(q.origin && q.dest);
+      }));
+      pick("#qz-origin", "origin", "origin");
+      pick("#qz-dest", "dest", "dest");
+      const next = el("qz-next");
+      next && next.addEventListener("click", () => { q.step = 2; render(); });
+    } else if (q.step === 2) {
+      single("size", "size");
+    } else if (q.step === 3) {
+      $$("#qz-commodity .choice").forEach((c) => c.addEventListener("click", () => {
+        q.commodity = c.dataset.commodity;
+        $$("#qz-commodity .choice").forEach((x) => x.classList.toggle("sel", x.dataset.commodity === q.commodity));
+        advance();
+      }));
+    } else if (q.step === 4) {
+      single("freq", "frequency");
+    } else if (q.step === 5) {
+      $$(".qz-opt[data-extra]").forEach((c) => c.addEventListener("click", () => {
+        const id = c.dataset.extra;
+        const i = q.extras.indexOf(id);
+        if (i >= 0) q.extras.splice(i, 1); else q.extras.push(id);
+        c.classList.toggle("sel");
+        const btn = el("qz-next"); if (btn) btn.innerHTML = (q.extras.length ? "Next " : "Skip ") + I('arrow','i-sm');
+      }));
+      const next = el("qz-next");
+      next && next.addEventListener("click", () => { q.step = 6; render(); });
+    } else if (q.step === 6) {
+      single("timing", "timing");
+    } else if (q.submitted) {
+      const again = el("qz-again");
+      again && again.addEventListener("click", () => { quoteReset(); render(); });
+    } else {
+      /* result screen: email capture */
+      const bindText = (id, key, after) => { const n = el(id); n && n.addEventListener("input", (e) => { q[key] = e.target.value; after && after(); }); };
+      const refresh = () => { const btn = el("qz-submit"); if (btn) btn.disabled = !emailOk(q.email); };
+      bindText("qz-name", "name");
+      bindText("qz-company", "company");
+      bindText("qz-mail", "email", refresh);
+      const edit = el("qz-edit");
+      edit && edit.addEventListener("click", () => { q.step = 0; render(); });
+      const submit = el("qz-submit");
+      submit && submit.addEventListener("click", () => {
+        if (!emailOk(q.email)) { toast("Enter a valid work email"); return; }
+        const est = MOOV.quoteEstimate(q);
+        const modeLabel = (MOOV.quoteConfig.modes.find((m) => m.id === q.mode) || {}).label || "Freight";
+        const who = q.company || q.name || q.email;
+        MOOV.quoteLeads.unshift({ ...q, est, received: "just now" });
+        /* the lead lands straight in the MOOV Ops action queue */
+        MOOV.opsQueue.unshift({
+          pri: "med", client: null, lead: who + " (prospect)", ship: null,
+          title: "New quote lead — recontact " + (q.name || q.email),
+          detail: `${modeLabel} · ${q.origin} → ${q.dest} · ${q.commodity || "General cargo"} · simulator range ${eur(est.low)}–${eur(est.high)} — send firm quote to ${q.email}.`,
+          age: "just now",
+        });
+        q.submitted = true;
+        render();
+        toast("Request sent — a MOOV specialist will be in touch within 1 business day");
+      });
+    }
+  }
+
+  /* =====================================================================
      VIEW: LOGIN
      ===================================================================== */
   function viewLogin() {
@@ -455,6 +715,11 @@
           <a class="brand" href="#/" style="color:#fff">${logoMark()} MOOV</a>
           <h2>The whole journey, in one place.</h2>
           <p>Every booking, container and customs event — live, with proactive alerts before problems reach your shelves.</p>
+          <div class="quote-promo">
+            <b>${I('zap','i-sm')} Get a Free Quote!</b>
+            <p>Answer 7 quick questions and get an instant price range — a specialist follows up with a firm offer.</p>
+            <a class="btn btn-light btn-sm" href="#/quote">Get an instant estimate ${I('arrow','i-sm')}</a>
+          </div>
         </div>
         <div class="quote">
           <p style="color:#fff;font-size:17px">"MOOV took our China-to-Europe lane from a spreadsheet to a control tower. We see issues before our stores do."</p>
@@ -471,10 +736,11 @@
           <button class="btn btn-primary btn-block" id="do-login" style="margin-top:22px">${I('users','i-sm')} Sign in as Client — Lidl Trading</button>
           <button class="btn btn-dark btn-block" id="do-login-ops" style="margin-top:10px">${I('hub','i-sm')} Sign in as MOOV Ops</button>
           <div class="demo-note">${I('info','i-sm')} <span><b>Prototype demo — one login, two roles.</b> The same entry point renders a different portal by role: clients see only their own account; MOOV Ops sees every client. No real authentication behind this yet.</span></div>
-          <p class="center" style="margin-top:20px;font-size:14px"><span class="muted">Not a client yet?</span> <a class="link" href="#/book">Book an intro call ${I('arrow','i-sm')}</a></p>
+          <p class="center" style="margin-top:20px;font-size:14px"><span class="muted">Not a client yet?</span> <a class="link" href="#/quote">Get a free quote</a> <span class="muted">·</span> <a class="link" href="#/book">Book an intro call ${I('arrow','i-sm')}</a></p>
         </div>
       </div>
-    </div>`);
+    </div>
+    ${quoteTab()}`);
   }
 
   /* =====================================================================
@@ -1165,7 +1431,7 @@
           <div class="q-title">${q.title}</div>
           <div class="q-detail">${q.detail}</div>
           <div class="q-meta">
-            <span class="chip">${I('building','i-sm')} ${MOOV.clientName(q.client)}</span>
+            <span class="chip">${I(q.lead ? 'zap' : 'building','i-sm')} ${q.lead || MOOV.clientName(q.client)}</span>
             ${q.ship ? `<span>·</span><a class="link" href="#/ops/shipments/${q.ship}">${q.ship}</a>` : ""}
             ${q.booking ? `<span>·</span><span>${q.booking}</span>` : ""}
             <span>·</span><span>open ${q.age}</span>
@@ -1377,6 +1643,7 @@
     });
     const parts = path.split("/").filter(Boolean); // e.g. ["app","shipments","MSKU-.."]
     if (parts[0] === "book") return { name: "book" };
+    if (parts[0] === "quote") return { name: "quote" };
     if (parts[0] === "login") return { name: "login" };
     if (parts[0] === "app") {
       if (parts[1] === "shipments" && parts[2]) return { name: "shipment", id: decodeURIComponent(parts[2]), params };
@@ -1410,6 +1677,7 @@
     let html = "";
     switch (route.name) {
       case "book": html = viewBook(); break;
+      case "quote": html = viewQuote(); break;
       case "login": html = viewLogin(); break;
       case "overview": html = viewOverview(); break;
       case "shipments": html = viewShipments(p.f); break;
@@ -1438,7 +1706,7 @@
     const bellBtn = el("bell-btn"), bellDrop = el("bell-drop");
     if (bellBtn && bellDrop) {
       const items = ops
-        ? MOOV.opsQueue.map((q) => ({ tone: q.pri === "high" ? "danger" : "warning", title: q.title, sub: MOOV.clientName(q.client) + (q.ship ? " · " + q.ship : "") + " · open " + q.age, href: q.ship ? detailBase + q.ship : "/ops" }))
+        ? MOOV.opsQueue.map((q) => ({ tone: q.pri === "high" ? "danger" : "warning", title: q.title, sub: (q.lead || MOOV.clientName(q.client)) + (q.ship ? " · " + q.ship : "") + " · open " + q.age, href: q.ship ? detailBase + q.ship : "/ops" }))
         : MOOV.alerts.map((a) => ({ tone: a.tone, title: a.title, sub: a.shipment + " · " + a.when, href: detailBase + a.shipment }));
       bellBtn.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -1488,6 +1756,7 @@
 
   function bindAfterRender(route) {
     if (route.name === "book") bindBook();
+    if (route.name === "quote") bindQuote();
 
     if (route.name === "login") {
       const btn = el("do-login");
