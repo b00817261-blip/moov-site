@@ -34,23 +34,6 @@
   /* =====================================================================
      SHARED CHROME
      ===================================================================== */
-  function publicNav(active) {
-    return `
-    <header class="nav"><div class="wrap nav-inner">
-      <a class="brand" href="#/">${logoMark()} MOOV</a>
-      <nav class="nav-links">
-        <a href="#/" class="${active==='home'?'':''}">Home</a>
-        <a href="#/#services">Services</a>
-        <a href="#/#how">How it works</a>
-        <a href="#/app">Client portal</a>
-      </nav>
-      <div class="nav-spacer"></div>
-      <div class="nav-actions">
-        <a class="btn btn-ghost btn-sm" href="#/login">${I('logout','i-sm')} Client login</a>
-        <a class="btn btn-primary btn-sm" href="#/book">Book a call</a>
-      </div>
-    </div></header>`;
-  }
   function logoMark() {
     return `<svg class="mark" viewBox="0 0 40 40" fill="none" aria-hidden="true">
       <rect width="40" height="40" rx="11" fill="#0b1f3a"/>
@@ -58,129 +41,6 @@
       <path d="M23 20h8M27 16l4 4-4 4" stroke="#14b8a6" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>`;
   }
-  function footer() {
-    return `
-    <footer class="footer"><div class="wrap">
-      <div class="cols">
-        <div>
-          <div class="brand">${logoMark()} MOOV</div>
-          <p style="max-width:34ch">Freight forwarding & 4PL, engineered between Europe and China. Headquartered in Shanghai since 2009.</p>
-        </div>
-        <div><h4>Services</h4>
-          <a href="#/#services">Ocean freight</a><a href="#/#services">Air freight</a>
-          <a href="#/#services">Rail freight</a><a href="#/#services">Bonded warehousing</a>
-          <a href="#/#services">smartMOOV 4PL</a>
-        </div>
-        <div><h4>Company</h4>
-          <a href="#/">About</a><a href="#/">Offices</a><a href="#/">Sustainability</a><a href="#/">Careers</a>
-        </div>
-        <div><h4>Get started</h4>
-          <a href="#/book">Book a call</a><a href="#/login">Client login</a><a href="#/">Contact</a>
-        </div>
-      </div>
-      <div class="foot-bottom">
-        <span>© 2026 MOOV Logistics (Shanghai) Co., Ltd. · Prototype — fictional data.</span>
-        <span>Shanghai · Ningbo · Shenzhen · Hamburg · Rotterdam · Lyon</span>
-      </div>
-    </div></footer>`;
-  }
-
-  /* =====================================================================
-     VIEW: LANDING
-     ===================================================================== */
-  function viewHome() {
-    const svc = MOOV.services.map((s) => {
-      if (s.featured) {
-        return `<div class="svc featured">
-          <div class="svc-icn">${I(s.icon)}</div>
-          <div>
-            <div class="svc-tag">${s.tag}</div>
-            <h3>${s.title}</h3>
-            <p>${s.desc}</p>
-          </div>
-          <a class="btn btn-light" href="#/book">Explore 4PL ${I('arrow','i-sm')}</a>
-        </div>`;
-      }
-      return `<div class="svc">
-        <div class="svc-icn">${I(s.icon)}</div>
-        <h3>${s.title}</h3>
-        <div class="svc-tag">${s.tag}</div>
-        <p>${s.desc}</p>
-      </div>`;
-    }).join("");
-
-    return h(`
-    ${publicNav('home')}
-    <section class="hero"><div class="wrap"><div class="hero-grid">
-      <div>
-        <span class="eyebrow">${I('globe','i-sm')} Shanghai · Since 2009</span>
-        <h1>Your cargo, moving as one system.</h1>
-        <p class="lede">MOOV is a Shanghai-based freight forwarder and 4PL partner, moving goods from China to Europe for retailers who can't afford surprises.</p>
-        <div class="cta-row">
-          <a class="btn btn-primary" href="#/book">Book a call ${I('arrow','i-sm')}</a>
-          <a class="btn btn-light" href="#/app">See the client portal</a>
-        </div>
-        <div class="trust">
-          <div><div class="n">14k+</div><div class="l">TEU moved / year</div></div>
-          <div><div class="n">6</div><div class="l">Offices, EU & China</div></div>
-          <div><div class="n">99.2%</div><div class="l">On-time milestone rate</div></div>
-        </div>
-      </div>
-      <div class="hero-card">
-        <div class="hc-top">
-          <span class="hc-id">MSKU-7781234</span>
-          <span class="pill pill-info"><span class="dot"></span>At sea</span>
-        </div>
-        <div class="hc-route">
-          <span>Shanghai</span><span class="arrow"></span><span>Hamburg</span>
-        </div>
-        <div class="hc-mini">
-          <div><div class="k">Incoterm</div><div class="v">FOB</div></div>
-          <div><div class="k">Containers</div><div class="v">3 × 40'</div></div>
-          <div><div class="k">ETA</div><div class="v">19 Jul</div></div>
-        </div>
-      </div>
-    </div></div>
-    <svg class="hero-wave" viewBox="0 0 1440 60" preserveAspectRatio="none"><path d="M0 30 Q 360 60 720 30 T 1440 30 V60 H0 Z" fill="#f5f7fb"/></svg>
-    </section>
-
-    <section class="section" id="services"><div class="wrap">
-      <div class="section-head">
-        <div class="kicker">What we do</div>
-        <h2>One partner across every mode and border</h2>
-        <p>From a single ocean booking to a fully managed supply chain, MOOV handles the freight, the paperwork and the control tower.</p>
-      </div>
-      <div class="services-grid">${svc}</div>
-    </div></section>
-
-    <div class="band"><div class="wrap">
-      <span class="lbl">Trusted by European retailers</span>
-      <div class="logos"><span>Lidl</span><span>Kaufland</span><span>Action</span><span>Normal</span><span>Woolworth</span></div>
-    </div></div>
-
-    <section class="section" id="how"><div class="wrap">
-      <div class="section-head">
-        <div class="kicker">How it works</div>
-        <h2>From first call to delivered container</h2>
-      </div>
-      <div class="steps">
-        <div class="step"><div class="num">STEP 01</div><h3>Tell us what you ship</h3><p>A two-minute qualification so we route you to the right desk — freight or strategic 4PL.</p></div>
-        <div class="step"><div class="num">STEP 02</div><h3>Meet your MOOV expert</h3><p>Pick a slot in CET or China time. You'll meet a named specialist, not a queue.</p></div>
-        <div class="step"><div class="num">STEP 03</div><h3>Track everything live</h3><p>Every booking, milestone and customs event in one portal — with proactive alerts.</p></div>
-      </div>
-    </div></section>
-
-    <section class="section" style="padding-top:0"><div class="wrap">
-      <div class="cta">
-        <h2>Let's move your next shipment.</h2>
-        <p>Book a 30-minute call with a MOOV expert. We'll map your lane, your Incoterms and where 4PL could take cost out.</p>
-        <a class="btn btn-light" href="#/book">Book a call ${I('arrow','i-sm')}</a>
-      </div>
-    </div></section>
-    ${footer()}
-    `);
-  }
-
   /* =====================================================================
      VIEW: BOOKING WIZARD
      ===================================================================== */
@@ -206,10 +66,15 @@
       : { t: "Book a call with a MOOV expert", p: "Tell us a little about your freight and we'll route you to the right team." };
 
     return h(`
-    ${publicNav()}
+    <header class="nav"><div class="wrap nav-inner">
+      <a class="brand" href="#/">${logoMark()} MOOV</a>
+      <span class="chip">${I('globe','i-sm')} Booking flow — embedded on the MOOV website</span>
+      <div class="nav-spacer"></div>
+      <a class="btn btn-ghost btn-sm" href="#/">${I('logout','i-sm')} Client sign in</a>
+    </div></header>
     <div class="book">
       <div class="book-hero"><div class="wrap">
-        <a class="back-link" href="#/" style="color:#9fb2d0;margin-bottom:18px">${I('chevleft','i-sm')} Back to home</a>
+        <a class="back-link" href="#/" style="color:#9fb2d0;margin-bottom:18px">${I('chevleft','i-sm')} Back to sign in</a>
         <h1>${heroText.t}</h1>
         <p>${heroText.p}</p>
       </div></div>
@@ -373,7 +238,7 @@
       </div>
 
       <div class="card-actions">
-        <a class="btn btn-ghost" href="#/">Back to home</a>
+        <a class="btn btn-ghost" href="#/">Back to sign in</a>
         <a class="btn btn-primary" href="#/app">Preview the client portal ${I('arrow','i-sm')}</a>
       </div>
     `;
@@ -461,6 +326,7 @@
           <button class="btn btn-primary btn-block" id="do-login" style="margin-top:22px">${I('users','i-sm')} Sign in as Client — Lidl Trading</button>
           <button class="btn btn-dark btn-block" id="do-login-ops" style="margin-top:10px">${I('hub','i-sm')} Sign in as MOOV Ops</button>
           <div class="demo-note">${I('info','i-sm')} <span><b>Prototype demo — one login, two roles.</b> The same entry point renders a different portal by role: clients see only their own account; MOOV Ops sees every client. No real authentication behind this yet.</span></div>
+          <p class="center" style="margin-top:20px;font-size:14px"><span class="muted">Not a client yet?</span> <a class="link" href="#/book">Book an intro call ${I('arrow','i-sm')}</a></p>
         </div>
       </div>
     </div>`);
@@ -1326,7 +1192,7 @@
      ===================================================================== */
   function parseHash() {
     let hash = window.location.hash.replace(/^#/, "");
-    if (!hash || hash === "/") return { name: "home" };
+    if (!hash || hash === "/") return { name: "login" };
     const [path, queryStr] = hash.split("?");
     const params = {};
     (queryStr || "").split("&").forEach((kv) => {
@@ -1353,7 +1219,7 @@
       if (parts[1] === "schedule") return { name: "opsSchedule", params };
       return { name: "opsQueue", params };
     }
-    return { name: "home" };
+    return { name: "login" };
   }
 
   const CLIENT_ROUTES = ["overview", "shipments", "shipment", "bookings", "documents", "invoices", "messages"];
@@ -1367,7 +1233,6 @@
     const p = route.params || {};
     let html = "";
     switch (route.name) {
-      case "home": html = viewHome(); break;
       case "book": html = viewBook(); break;
       case "login": html = viewLogin(); break;
       case "overview": html = viewOverview(); break;
@@ -1382,12 +1247,11 @@
       case "opsShipment": html = viewShipmentDetail(route.id, true); break;
       case "opsClients": html = viewOpsClients(); break;
       case "opsSchedule": html = viewOpsSchedule(); break;
-      default: html = viewHome();
+      default: html = viewLogin();
     }
     app.innerHTML = html;
     window.scrollTo(0, 0);
     bindAfterRender(route);
-    handleAnchorScroll();
   }
 
   /* ---- topbar: notification bell + global search --------------------- */
@@ -1595,16 +1459,6 @@
       };
       send && send.addEventListener("click", doSend);
       input && input.addEventListener("keydown", (e) => { if (e.key === "Enter") doSend(); });
-    }
-  }
-
-  function handleAnchorScroll() {
-    // support #/#services style anchors
-    const raw = window.location.hash;
-    const m = raw.match(/#\/#(.+)$/);
-    if (m) {
-      const target = document.getElementById(m[1]);
-      if (target) setTimeout(() => target.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
     }
   }
 

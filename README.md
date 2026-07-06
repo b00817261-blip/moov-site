@@ -21,11 +21,13 @@ python3 -m http.server 8099
 
 ## What's inside
 
-### 1. Public side (prospect-facing)
-- **Landing page** — MOOV's services: ocean / air / rail freight forwarding,
-  bonded warehousing, customs clearance, and the featured **smartMOOV 4PL**
-  programme, plus how-it-works and trust sections.
-- **"Book a call" flow** (`#/book`) — a 3-step wizard:
+The app opens directly on the **sign-in screen** — MOOV's marketing site
+lives elsewhere; this portal is for current clients and MOOV staff.
+
+### 1. Booking flow (website-embedded)
+- **"Book a call" flow** (`#/book`) — the wizard that would embed on the
+  MOOV marketing site (linked from the sign-in screen for prospects), a
+  3-step flow:
   1. **Qualification form** — company, what they ship, origin/destination,
      monthly volume, current Incoterm, and service interest.
   2. **Slot picker** — calendar-style, every slot shown in **CET and China
