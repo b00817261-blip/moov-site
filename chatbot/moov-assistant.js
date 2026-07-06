@@ -421,6 +421,19 @@
       chips: [],
     },
     {
+      id: "carriers",
+      keywords: ["supplier", "carrier", "vendor", "subcontractor"],
+      phrases: ["do you choose", "who chooses", "who selects", "who picks", "your network", "which carriers", "own contracts"],
+      answer: function () {
+        return (
+          "Both ways work with MOOV. You can bring <b>your own carrier contracts</b> — the smartMOOV platform stores them, manages space and prioritization, and monitors each carrier's KPI performance — or rely on <b>MOOV's carrier network</b> and let our team source the capacity for you.<br><br>" +
+          "Your product <b>suppliers stay yours</b>: MOOV coordinates them through order milestones on the platform (cargo ready dates, quality inspections, bookings), so everyone completes their tasks on time." +
+          moreLink(PAGES.fourpl, "Read more: smartMOOV 4PL program")
+        );
+      },
+      chips: ["smartMOOV Essentials", "Get a quote", "Contact MOOV"],
+    },
+    {
       id: "thanks",
       keywords: ["thanks", "thank", "merci", "great", "perfect", "awesome", "helpful"],
       phrases: ["thank you"],

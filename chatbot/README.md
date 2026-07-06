@@ -88,8 +88,14 @@ widget itself):
 If the backend is slow, down, or not configured, the widget silently falls
 back to its normal behavior — the site never breaks.
 
+**Live site search:** the AI can also search moovlogistics.com in real time
+(restricted to that domain only) when its built-in knowledge isn't enough —
+so answers stay grounded in what the website actually says, and new site
+content is picked up automatically without retraining anything.
+
 **Cost:** the worker defaults to Claude Opus 4.8 (about $0.01–0.03 per
-AI-answered question at typical lengths). Set the `CLAUDE_MODEL` variable to
+AI-answered question at typical lengths, plus $0.01 per web search when the
+AI decides to search the site). Set the `CLAUDE_MODEL` variable to
 `claude-haiku-4-5` for roughly 5× cheaper answers if volume grows. Only
 unrecognized questions reach the AI — common questions are answered free by
 the built-in knowledge base.

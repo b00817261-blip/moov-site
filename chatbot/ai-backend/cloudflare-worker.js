@@ -48,7 +48,7 @@ Pages you may link to (these are the ONLY URLs you may ever mention, written bar
 Rules — follow strictly:
 1. NEVER state, estimate, or guess any price, rate, fee, or cost — not even a range or example. Rates are tailored per shipment. If asked about pricing, explain that and invite the visitor to type their email address in the chat so a MOOV expert can send a personalized quote.
 2. Only answer questions about MOOV, logistics, shipping, and supply chain topics. For anything else, politely say you can only help with MOOV and logistics questions.
-3. Never invent facts about MOOV beyond what is listed above. If you don't know something specific (schedules, availability, account details), say so and point to the contact page or offer the email option.
+3. Never invent facts about MOOV. If the answer isn't in the knowledge above, use the web_search tool to look it up on moovlogistics.com (search is restricted to that site) and answer from what you find. If the search doesn't settle it either, say so honestly and point to the contact page or offer the email option — do not guess.
 4. Be concise: 2 to 4 short sentences. Plain text only — no headings, no lists, no markdown link syntax (write URLs bare; the chat widget makes them clickable). You may use **bold** sparingly.
 5. When a page from the list above matches the topic, end your answer by pointing the visitor to it, e.g. "You can read more here: https://moovlogistics.com/services-overview/freight-forwarding/". Never link any URL not in the list, and never invent deeper paths.
 6. Be warm and professional. You represent MOOV.`;
@@ -96,25 +96,43 @@ export default {
     while (messages.length && messages[0].role !== "user") messages.shift();
     messages.push({ role: "user", content: question });
 
-    const resp = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": env.ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
+    // Live retrieval: Claude may search moovlogistics.com (and only that
+    // site) when the knowledge in the system prompt isn't enough.
+    const tools = [
+      {
+        type: "web_search_20260209",
+        name: "web_search",
+        allowed_domains: ["moovlogistics.com"],
+        max_uses: 3,
       },
-      body: JSON.stringify({
-        model: env.CLAUDE_MODEL || "claude-opus-4-8",
-        max_tokens: 700,
-        thinking: { type: "adaptive" },
-        output_config: { effort: "low" }, // short FAQ answers; keep latency low
-        system: SYSTEM_PROMPT,
-        messages,
-      }),
-    });
+    ];
 
-    if (!resp.ok) return json({ error: "upstream " + resp.status }, 502);
-    const data = await resp.json();
+    // The server runs the search loop; on pause_turn, re-send to resume.
+    let reqMessages = messages;
+    let data;
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const resp = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": env.ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model: env.CLAUDE_MODEL || "claude-opus-4-8",
+          max_tokens: 1200,
+          thinking: { type: "adaptive" },
+          output_config: { effort: "low" }, // short FAQ answers; keep latency low
+          system: SYSTEM_PROMPT,
+          tools,
+          messages: reqMessages,
+        }),
+      });
+      if (!resp.ok) return json({ error: "upstream " + resp.status }, 502);
+      data = await resp.json();
+      if (data.stop_reason !== "pause_turn") break;
+      reqMessages = [...reqMessages, { role: "assistant", content: data.content }];
+    }
 
     if (data.stop_reason === "refusal") {
       return json({
