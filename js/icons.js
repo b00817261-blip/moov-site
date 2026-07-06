@@ -1,0 +1,43 @@
+/* Minimal inline SVG icon set (stroke-based, currentColor). */
+window.MOOV = window.MOOV || {};
+MOOV.icon = function (name, cls) {
+  const p = {
+    ship: '<path d="M3 15l1.5 5h15L21 15M12 4v11M12 4l6 3M12 4L6 7M5 15l7-2 7 2M8 8v3M16 8v3"/>',
+    plane: '<path d="M10 3l1 7-8 4v2l8-2 1 5-2 2v1l3-1 3 1v-1l-2-2 1-5 8 2v-2l-8-4 1-7a1.5 1.5 0 00-3 0z"/>',
+    train: '<rect x="5" y="3" width="14" height="13" rx="3"/><path d="M5 10h14M9 20l-2 2M15 20l2 2M9 13h.01M15 13h.01"/>',
+    warehouse: '<path d="M3 21V8l9-4 9 4v13M3 21h18M7 21v-7h10v7M7 14h10"/>',
+    stamp: '<path d="M9 3h6a2 2 0 012 2c0 1.5-1 2-1.5 3.5S16 12 16 12H8s.5-1.5 0-3.5S7 6.5 7 5a2 2 0 012-2zM5 16h14v2H5zM4 21h16"/>',
+    hub: '<circle cx="12" cy="12" r="3"/><circle cx="12" cy="4" r="1.6"/><circle cx="12" cy="20" r="1.6"/><circle cx="4" cy="8" r="1.6"/><circle cx="20" cy="8" r="1.6"/><circle cx="4" cy="16" r="1.6"/><circle cx="20" cy="16" r="1.6"/><path d="M12 6v3M12 15v3M9.5 10.5L5.3 8.7M14.5 10.5l4.2-1.8M9.5 13.5L5.3 15.3M14.5 13.5l4.2 1.8"/>',
+    arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+    box: '<path d="M21 8l-9-5-9 5 9 5 9-5zM3 8v8l9 5 9-5V8M12 13v8"/>',
+    anchor: '<circle cx="12" cy="5" r="2.5"/><path d="M12 7.5V21M5 12H3s0 6 9 6 9-6 9-6h-2M12 21c-3 0-5-1.5-5-1.5M12 21c3 0 5-1.5 5-1.5"/>',
+    bell: '<path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 01-3.4 0"/>',
+    wallet: '<path d="M3 7a2 2 0 012-2h13v4M3 7v10a2 2 0 002 2h14a1 1 0 001-1v-4M3 7h16a1 1 0 011 1v3M17 12h4v3h-4a1.5 1.5 0 010-3z"/>',
+    grid: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+    list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
+    doc: '<path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8l-5-5zM14 3v5h5M9 13h6M9 17h6"/>',
+    life: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/><path d="M4.9 4.9l4.6 4.6M14.5 14.5l4.6 4.6M19.1 4.9l-4.6 4.6M9.5 14.5l-4.6 4.6"/>',
+    check: '<path d="M5 13l4 4L19 7"/>',
+    checkbig: '<path d="M4 12l5 5L20 6"/>',
+    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    calendar: '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/>',
+    search: '<circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/>',
+    alert: '<path d="M12 9v4M12 17h.01M10.3 3.9L2.4 18a2 2 0 001.7 3h15.8a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/>',
+    warn: '<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/>',
+    info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+    logout: '<path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>',
+    globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 010 18M12 3a15 15 0 000 18"/>',
+    map: '<path d="M9 3L3 6v15l6-3 6 3 6-3V3l-6 3-6-3zM9 3v15M15 6v15"/>',
+    building: '<path d="M4 21V5a2 2 0 012-2h6a2 2 0 012 2v16M14 21V9h4a2 2 0 012 2v10M4 21h18M7 7h2M7 11h2M7 15h2"/>',
+    users: '<circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0112 0M16 5.5a3 3 0 010 5.8M21 20a6 6 0 00-4-5.6"/>',
+    zap: '<path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/>',
+    shield: '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z"/>',
+    chevron: '<path d="M9 6l6 6-6 6"/>',
+    chevleft: '<path d="M15 6l-6 6 6 6"/>',
+    menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
+    pin: '<path d="M12 21s7-6 7-11a7 7 0 10-14 0c0 5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+    trend: '<path d="M3 17l6-6 4 4 8-8M21 7v5M21 7h-5"/>',
+    dollar: '<path d="M12 2v20M17 6a4 4 0 00-4-2H10a3 3 0 000 6h4a3 3 0 010 6h-3a4 4 0 01-4-2"/>',
+  }[name] || '';
+  return '<svg class="i ' + (cls || '') + '" viewBox="0 0 24 24" aria-hidden="true">' + p + '</svg>';
+};
