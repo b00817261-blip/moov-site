@@ -80,7 +80,7 @@ widget itself):
 ```html
 <script>
   window.MoovChatbotConfig = {
-    aiEndpoint: "https://moov-assistant.YOUR-SUBDOMAIN.workers.dev",
+    aiEndpoint: "https://moov-assistant.b00817261.workers.dev/",
   };
 </script>
 ```
