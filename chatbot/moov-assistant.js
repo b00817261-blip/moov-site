@@ -51,6 +51,29 @@
     return '<a href="' + url + '" target="_blank" rel="noopener">' + label + "</a>";
   };
 
+  // Real pages on moovlogistics.com — every answer points to the matching one.
+  var PAGES = {
+    services: "https://moovlogistics.com/services-overview/",
+    forwarding: "https://moovlogistics.com/services-overview/freight-forwarding/",
+    ocean: "https://moovlogistics.com/services-overview/freight-forwarding/ocean/",
+    air: "https://moovlogistics.com/services-overview/freight-forwarding/air/",
+    rail: "https://moovlogistics.com/services-overview/freight-forwarding/train/",
+    customs: "https://moovlogistics.com/services-overview/custom-clearance/",
+    fourpl: "https://moovlogistics.com/services-overview/smartmoov-4pl-program/",
+    essentials: "https://moovlogistics.com/services-overview/smartmoov-essentials/",
+    warehousing: "https://moovlogistics.com/value-added-warehousing-services/",
+    vas: "https://moovlogistics.com/services/warehousing-2/value-added-logistics-services/",
+    digitalWarehouse: "https://moovlogistics.com/services/warehousing/my-digital-warehouse/",
+    about: "https://moovlogistics.com/who-we-are/",
+    contact: "https://moovlogistics.com/contact-us/",
+    faq: "https://moovlogistics.com/faq/",
+    knowledge: "https://moovlogistics.com/knowledge-center/",
+  };
+
+  function moreLink(url, label) {
+    return '<br><br>👉 ' + LINK(url, label);
+  }
+
   var INTENTS = [
     {
       id: "greeting",
@@ -86,7 +109,8 @@
       answer: function () {
         return (
           "<b>Freight forwarding</b> is the organizing of cargo shipments on behalf of a business: a freight forwarder like MOOV books the space with carriers, prepares the documents, handles customs and tracks the shipment — so you don't have to deal with each carrier and border yourself.<br><br>" +
-          "MOOV forwards freight by <b>ocean, air and rail</b>, with customs clearance and cargo insurance included as needed. Which mode are you interested in?"
+          "MOOV forwards freight by <b>ocean, air and rail</b>, with customs clearance and cargo insurance included as needed. Which mode are you interested in?" +
+          moreLink(PAGES.forwarding, "Read more: Freight forwarding at MOOV")
         );
       },
       chips: ["Ocean freight", "Air freight", "Rail freight", "Get a quote"],
@@ -97,8 +121,8 @@
       phrases: ["sea freight", "ocean freight", "by boat"],
       answer: function () {
         return (
-          "MOOV provides ocean freight forwarding for both FCL and LCL shipments, with strong coverage out of China's major port cities where we operate our own warehouses. Value-added options include home delivery, customs clearance and cargo insurance.<br><br>" +
-          "More details: " + LINK("https://moovlogistics.com/services/freight-forwarding/ocean-freight/", "Ocean freight at MOOV") + "."
+          "MOOV provides ocean freight forwarding for both FCL and LCL shipments, with strong coverage out of China's major port cities where we operate our own warehouses. Value-added options include home delivery, customs clearance and cargo insurance." +
+          moreLink(PAGES.ocean, "Read more: Ocean freight")
         );
       },
       chips: ["Get a quote", "Transit times", "Customs clearance"],
@@ -109,8 +133,8 @@
       phrases: ["air freight", "by air", "air cargo"],
       answer: function () {
         return (
-          "MOOV offers global air freight solutions for virtually every industry — from pharmaceuticals and industrial machinery to perishable food. We also handle special requirements such as cold chain / temperature control and high-value goods.<br><br>" +
-          "It's the right choice when speed matters most. Want an air freight quote?"
+          "MOOV offers global air freight solutions for virtually every industry — from pharmaceuticals and industrial machinery to perishable food. We also handle special requirements such as cold chain / temperature control and high-value goods. It's the right choice when speed matters most." +
+          moreLink(PAGES.air, "Read more: Air freight")
         );
       },
       chips: ["Get a quote", "Cold chain shipping", "Transit times"],
@@ -121,7 +145,8 @@
       phrases: ["rail freight", "by train", "china europe train"],
       answer: function () {
         return (
-          "Yes — MOOV forwards freight by rail, a great middle ground between ocean (cheaper, slower) and air (faster, pricier), especially on China–Europe corridors. We can advise on which mode fits your cargo, timeline and budget best."
+          "Yes — MOOV forwards freight by rail, a great middle ground between ocean (cheaper, slower) and air (faster, pricier), especially on China–Europe corridors (transit is typically around 20 days terminal to terminal). We can advise on which mode fits your cargo, timeline and budget best." +
+          moreLink(PAGES.rail, "Read more: Rail freight")
         );
       },
       chips: ["Get a quote", "Which mode should I choose?"],
@@ -132,7 +157,8 @@
       phrases: ["customs clearance", "import tax", "clear customs"],
       answer: function () {
         return (
-          "MOOV handles customs clearance for both <b>import and export</b>, with local expert teams that keep your paperwork, HS codes and declarations compliant so your cargo isn't held up at the border. Customs clearance is fully integrated with our freight forwarding and warehousing services."
+          "MOOV handles customs clearance for both <b>import and export</b>, with local expert teams that keep your paperwork, HS codes and declarations compliant so your cargo isn't held up at the border. Customs clearance is fully integrated with our freight forwarding and warehousing services." +
+          moreLink(PAGES.customs, "Read more: Customs clearance")
         );
       },
       chips: ["Get a quote", "What documents do I need?", "Contact MOOV"],
@@ -144,8 +170,8 @@
       answer: function () {
         return (
           "MOOV operates warehouses in <b>4 major port cities in China</b>, all integrated with our freight forwarding, customs clearance and the smartMOOV control tower — so you get full visibility from origin to delivery.<br><br>" +
-          "On top of storage we offer value-added services: quality inspection, pick &amp; pack, labeling, repair and assembly. More at " +
-          LINK("https://moovlogistics.com/value-added-warehousing-services/", "value-added warehousing services") + "."
+          "On top of storage we offer value-added services: quality inspection, pick &amp; pack, labeling, repair and assembly." +
+          moreLink(PAGES.warehousing, "Read more: Warehousing at MOOV")
         );
       },
       chips: ["Value-added services", "Get a quote", "Where are your warehouses?"],
@@ -158,8 +184,8 @@
         return (
           "Our value-added logistics services are tailored to your products, channels and supply chain model. They include:<br><br>" +
           "• Quality inspection<br>• Pick &amp; pack<br>• Labeling<br>• Repair<br>• Assembling / kitting<br><br>" +
-          "Everything runs inside MOOV warehouses and is visible in the smartMOOV platform. Details: " +
-          LINK("https://moovlogistics.com/services/warehousing-2/value-added-logistics-services/", "value-added services") + "."
+          "Everything runs inside MOOV warehouses and is visible in the smartMOOV platform." +
+          moreLink(PAGES.vas, "Read more: Value-added services")
         );
       },
       chips: ["Warehousing", "Get a quote"],
@@ -171,8 +197,8 @@
       answer: function () {
         return (
           "<b>smartMOOV</b> is our 4PL program: MOOV becomes the single point of contact that plans, executes and optimizes your entire supply chain — orders, bookings, carriers, warehousing and customs — through one digital control tower.<br><br>" +
-          "You get milestone tracking with built-in escalation, carrier KPI monitoring, contract &amp; rate management, and full end-to-end visibility. Learn more: " +
-          LINK("https://moovlogistics.com/services-overview/smartmoov-4pl-program/", "smartMOOV 4PL") + "."
+          "You get milestone tracking with built-in escalation, carrier KPI monitoring, contract &amp; rate management, and full end-to-end visibility." +
+          moreLink(PAGES.fourpl, "Read more: smartMOOV 4PL program")
         );
       },
       chips: ["smartMOOV Essentials", "Get a quote", "Digital platform"],
@@ -183,8 +209,8 @@
       phrases: ["smartmoov essentials"],
       answer: function () {
         return (
-          "<b>smartMOOV Essentials</b> gives you transparency and visibility over your shipments <i>without significant investment costs</i>. Orders are uploaded online, every party completes its milestones (cargo ready dates, quality inspections…), reminders and escalations keep things on time, and you can monitor bookings, carrier schedules and KPI performance in one place.<br><br>" +
-          LINK("https://moovlogistics.com/services-overview/smartmoov-essentials/", "Read about smartMOOV Essentials") + "."
+          "<b>smartMOOV Essentials</b> gives you transparency and visibility over your shipments <i>without significant investment costs</i>. Orders are uploaded online, every party completes its milestones (cargo ready dates, quality inspections…), reminders and escalations keep things on time, and you can monitor bookings, carrier schedules and KPI performance in one place." +
+          moreLink(PAGES.essentials, "Read more: smartMOOV Essentials")
         );
       },
       chips: ["smartMOOV 4PL", "Get a quote"],
@@ -195,9 +221,10 @@
       phrases: ["where is my", "where s my", "track my", "track a shipment", "how do i track", "how can i track", "shipment status", "order status", "my cargo", "my container", "my shipment", "my order", "follow my"],
       answer: function () {
         return (
-          "You can follow your cargo in real time through the <b>smartMOOV platform</b> — it has an integrated tracking module showing where your cargo is and the latest schedule updates.<br><br>" +
-          "If you're an existing customer, log in to your smartMOOV account or contact your MOOV representative. If you don't have access yet, " +
-          LINK(cfg.contactPage, "reach out to our team") + " and we'll set you up."
+          "You can follow your cargo in real time on the <b>smartMOOV platform</b> — live vessel &amp; shipment tracking from origin to destination, milestone alerts and document sharing: " +
+          LINK(PAGES.essentials, "see how smartMOOV tracking works") + ".<br><br>" +
+          "If you're an existing customer, log in with your smartMOOV account. No access yet? " +
+          LINK(PAGES.contact, "Reach out to our team") + " and we'll set you up."
         );
       },
       chips: ["Digital platform", "Contact MOOV"],
@@ -208,7 +235,8 @@
       phrases: ["project cargo", "heavy lift", "out of gauge", "special project"],
       answer: function () {
         return (
-          "MOOV handles <b>project cargo</b> — oversized, heavy-lift and out-of-gauge shipments that need special planning, equipment and routing. Our team engineers the move end to end, including permits and multimodal legs. Tell us about your cargo and we'll design the solution."
+          "MOOV handles <b>project cargo</b> — oversized, heavy-lift and out-of-gauge shipments that need special planning, equipment and routing. Our team engineers the move end to end, including permits and multimodal legs. Tell us about your cargo and we'll design the solution." +
+          moreLink(PAGES.services, "Read more: MOOV services")
         );
       },
       chips: ["Get a quote", "Contact MOOV"],
@@ -219,7 +247,8 @@
       phrases: ["cold chain", "temperature control", "temperature controlled", "dangerous goods"],
       answer: function () {
         return (
-          "Yes — MOOV handles special shipping requirements including <b>cold chain / temperature-controlled</b> cargo, perishable goods, pharmaceuticals and high-value objects. Share the details of your cargo and our specialists will recommend the right setup."
+          "Yes — MOOV handles special shipping requirements including <b>cold chain / temperature-controlled</b> cargo, perishable goods, pharmaceuticals and high-value objects. Share the details of your cargo and our specialists will recommend the right setup." +
+          moreLink(PAGES.air, "Read more: Air freight & special cargo")
         );
       },
       chips: ["Air freight", "Get a quote"],
@@ -231,8 +260,8 @@
       answer: function () {
         return (
           "MOOV is Asia's smart logistics and supply chain management company. We trace our roots to <b>KLG Europe</b>, a European logistics holding with over 100 years of history (since 1918). MOOV itself started in <b>2013</b> as an innovative company continuing that legacy — combining a century of logistics experience with modern digital solutions.<br><br>" +
-          "Today MOOV is headquartered in Shanghai, operates warehouses in 4 major Chinese port cities, and is part of a global network of 16 offices in 4 countries. More: " +
-          LINK("https://moovlogistics.com/who-we-are/", "Who we are") + "."
+          "Today MOOV is headquartered in Shanghai, operates warehouses in 4 major Chinese port cities, and is part of a global network of 16 offices in 4 countries." +
+          moreLink(PAGES.about, "Read more: Who we are")
         );
       },
       chips: ["Where are your offices?", "What services do you offer?"],
@@ -283,8 +312,9 @@
       phrases: ["how long", "transit time", "lead time", "delivery time", "how many days", "how quickly"],
       answer: function () {
         return (
-          "Transit times depend on the mode and route. As a rule of thumb: <b>air</b> is the fastest (days), <b>rail</b> is the middle ground (~2–3 weeks China–Europe), and <b>ocean</b> is the most economical (several weeks). Exact schedules vary by corridor and carrier.<br><br>" +
-          "Tell me your origin, destination and cargo — or leave your email — and our team will give you precise options."
+          "Transit times depend on the mode and route. As a rule of thumb: <b>air</b> is the fastest (days), <b>rail</b> is the middle ground (~20 days China–Europe), and <b>ocean</b> is the most economical (several weeks). Exact schedules vary by corridor and carrier.<br><br>" +
+          "Tell me your origin, destination and cargo — or leave your email — and our team will give you precise options." +
+          moreLink(PAGES.forwarding, "Compare modes: Freight forwarding")
         );
       },
       chips: ["Get a quote", "Which mode should I choose?"],
@@ -299,7 +329,8 @@
           "• <b>Air</b> — fastest, best for urgent, high-value or perishable goods<br>" +
           "• <b>Rail</b> — good balance of speed and cost (e.g. China–Europe)<br>" +
           "• <b>Ocean</b> — most economical for large volumes when time allows<br><br>" +
-          "MOOV's team can compare options for your exact route and cargo — leave your email and we'll send you a tailored recommendation."
+          "MOOV's team can compare options for your exact route and cargo — leave your email and we'll send you a tailored recommendation." +
+          moreLink(PAGES.forwarding, "Compare modes: Freight forwarding")
         );
       },
       chips: ["Get a quote", "Transit times"],
@@ -310,7 +341,8 @@
       phrases: ["it solutions", "your platform"],
       answer: function () {
         return (
-          "MOOV develops and runs its own digital IT solutions to streamline communication, information and process flow. The <b>smartMOOV platform</b> gives you real-time tracking, analytics, milestone management with escalations, carrier schedules, rate subscriptions and contract management — designed to support your business, not complicate it, and set up to fit <i>your</i> supply chain."
+          "MOOV develops and runs its own digital IT solutions to streamline communication, information and process flow. The <b>smartMOOV platform</b> gives you real-time tracking, analytics, milestone management with escalations, carrier schedules, rate subscriptions and contract management — designed to support your business, not complicate it, and set up to fit <i>your</i> supply chain." +
+          moreLink(PAGES.essentials, "Read more: the smartMOOV platform")
         );
       },
       chips: ["smartMOOV 4PL", "Track my shipment"],
@@ -333,7 +365,8 @@
       phrases: ["what documents", "bill of lading", "packing list"],
       answer: function () {
         return (
-          "Typical shipment documents include the commercial invoice, packing list, bill of lading (or air waybill) and, depending on the cargo and destination, certificates of origin or product certificates. Don't worry — MOOV's customs and forwarding teams guide you through exactly what's needed for your shipment and destination."
+          "Typical shipment documents include the commercial invoice, packing list, bill of lading (or air waybill) and, depending on the cargo and destination, certificates of origin or product certificates. Don't worry — MOOV's customs and forwarding teams guide you through exactly what's needed for your shipment and destination." +
+          moreLink(PAGES.customs, "Read more: Customs clearance")
         );
       },
       chips: ["Customs clearance", "Contact MOOV"],
@@ -344,7 +377,8 @@
       phrases: ["domestic transportation", "domestic transport", "last mile", "inland transport", "local delivery", "door to door", "trucking", "by truck", "by road"],
       answer: function () {
         return (
-          "MOOV handles <b>domestic transportation</b> too — trucking and distribution that connect our warehouses, the ports and your final destinations, fully integrated with our freight forwarding and customs services so one partner covers the whole door-to-door move."
+          "MOOV handles <b>domestic transportation</b> too — mature domestic trucking and distribution that connect our warehouses, the ports and your final destinations, fully integrated with our freight forwarding and customs services so one partner covers the whole door-to-door move." +
+          moreLink(PAGES.services, "Read more: MOOV services")
         );
       },
       chips: ["Warehousing", "Get a quote"],
@@ -355,7 +389,8 @@
       phrases: ["online store", "online shop", "e commerce"],
       answer: function () {
         return (
-          "Yes — MOOV supports e-commerce supply chains. Our warehouses in China's major port cities handle <b>fulfillment-style operations</b>: storage, quality inspection, pick &amp; pack, labeling and kitting, connected to ocean, air and rail freight for replenishment. Tell us about your channels and volumes and we'll design the right setup."
+          "Yes — MOOV supports e-commerce supply chains. Our warehouses in China's major port cities handle <b>fulfillment-style operations</b>: storage, quality inspection, pick &amp; pack, labeling and kitting, connected to ocean, air and rail freight for replenishment. Tell us about your channels and volumes and we'll design the right setup." +
+          moreLink(PAGES.warehousing, "Read more: Warehousing & fulfillment")
         );
       },
       chips: ["Warehousing", "Get a quote"],
@@ -366,7 +401,8 @@
       phrases: ["what industries", "which industries", "do you work with", "experience with"],
       answer: function () {
         return (
-          "MOOV serves virtually every industry — from <b>pharmaceuticals</b> and <b>industrial machinery</b> to <b>perishable food</b>, retail and consumer goods. Each supply chain gets a tailored setup rather than a one-size-fits-all approach: we take time to understand your products and channels first."
+          "MOOV serves virtually every industry — from <b>pharmaceuticals</b> and <b>industrial machinery</b> to <b>perishable food</b>, retail and consumer goods. Each supply chain gets a tailored setup rather than a one-size-fits-all approach: we take time to understand your products and channels first." +
+          moreLink(PAGES.services, "Read more: MOOV services")
         );
       },
       chips: ["What services do you offer?", "Get a quote"],
@@ -409,7 +445,7 @@
   function fallbackAnswer() {
     return (
       "I'm not sure I got that — I'm best at questions about MOOV's services, shipping, warehousing, customs, tracking and quotes.<br><br>" +
-      "You can try one of the topics below, or leave your <b>email address</b> and a member of our team will personally answer your question."
+      "You can try one of the topics below, browse our " + LINK(PAGES.faq, "FAQ") + ", or leave your <b>email address</b> and a member of our team will personally answer your question."
     );
   }
 
@@ -788,10 +824,14 @@
       });
   }
 
-  // AI answers arrive as plain text — escape, then allow **bold** and newlines.
+  // AI answers arrive as plain text — escape, then allow **bold**, newlines,
+  // and turn bare URLs into clickable links.
   function renderAiText(text) {
     return escapeHtml(text)
       .replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
+      .replace(/(https?:\/\/[^\s<)]+?)([.,;)]?)(\s|$)/g, function (m, url, punct, tail) {
+        return LINK(url, url.replace(/^https?:\/\/(www\.)?/, "")) + punct + tail;
+      })
       .replace(/\n/g, "<br>");
   }
 
