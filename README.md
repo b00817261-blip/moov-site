@@ -113,13 +113,19 @@ A "Demo: switch view" link in each sidebar jumps between the two.
   headcount (e.g. "Ola Nowak +2").
 
 ### 5. smartMOOV BI Catalogue (Ops console)
-- **BI Catalogue** (`#/ops/reports`) — two windows over the same data:
-  a **"Find a report"** finder and a **"Usage & cleanup"** inventory of the
-  **PEPCO Power BI workspace** (106 reports across 10 categories, ranked by
-  **actual views** from the Usage Metrics Report, 6 Jun – 5 Jul 2026). Built
-  to answer four questions: *what are we actually using, what's genuinely
-  there for the client, what's just used as a data download, and where are
-  the big datasets*.
+- **BI Catalogue** (`#/ops/reports`) — three windows over the same data:
+  an **"Ask"** assistant, a **"Find a report"** finder and a
+  **"Usage & cleanup"** inventory of the **PEPCO Power BI workspace**
+  (106 reports across 10 categories, ranked by **actual views** from the
+  Usage Metrics Report, 6 Jun – 5 Jul 2026). Built to answer four questions:
+  *what are we actually using, what's genuinely there for the client, what's
+  just used as a data download, and where are the big datasets*.
+- **Ask** — a chat-style assistant: type a plain-English question ("why is
+  my container stuck at the port?") and it ranks the three best-matching
+  reports using keyword + synonym + intent scoring (e.g. *stuck* → AHOD,
+  demurrage, detention). Fully client-side — nothing leaves the browser.
+  Answers show the description, when to use it, the click-path and an Open
+  in smartMOOV button.
 - **Find a report** — task-oriented search ("customs delay", "container
   fill", "late supplier"…) over names, topics and keywords. Every card gives
   a *"Use this when…"* sentence, the **click-path inside smartMOOV**

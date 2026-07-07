@@ -1010,3 +1010,20 @@ tr.bi-detail-row > td { background: var(--canvas); padding: 0 !important; }
 .bi-fcard-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .bi-fcard-views { font-size: 11.5px; color: var(--ink-3); font-weight: 600; }
 .bi-fcard-actions { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+
+/* BI Ask — chat assistant */
+.bi-ask-panel { padding: 20px 22px; margin-top: 16px; }
+.bi-chat { display: flex; flex-direction: column; gap: 14px; min-height: 200px; max-height: 60vh; overflow-y: auto; padding-right: 4px; }
+.bi-msg { max-width: 88%; padding: 13px 16px; border-radius: 14px; font-size: 14.5px; line-height: 1.5; }
+.bi-msg.user { align-self: flex-end; background: var(--navy-800); color: #fff; border-bottom-right-radius: 4px; }
+.bi-msg.bot { align-self: flex-start; background: var(--canvas); border: 1px solid var(--line-2); border-bottom-left-radius: 4px; width: 100%; max-width: 100%; }
+.bi-msg-lead { color: var(--ink-2); }
+.bi-ask-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.bi-ask-card { background: var(--surface); border: 1px solid var(--line); border-radius: 11px; padding: 13px 15px; margin-top: 10px; }
+.bi-ask-card.best { border-color: #a7d9b9; background: var(--success-bg); }
+.bi-ask-card.best .bi-fcard-path { background: #fff; }
+.bi-ask-best { font-size: 10.5px; font-weight: 700; color: #fff; background: var(--success); padding: 2px 9px; border-radius: 999px; }
+.bi-ask-card .bi-fcard-uw { margin: 8px 0 0; }
+.bi-ask-card .bi-fcard-path { margin: 10px 0; }
+.bi-ask-inputbar { display: flex; gap: 10px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line-2); }
+.bi-ask-inputbar .input { flex: 1; }

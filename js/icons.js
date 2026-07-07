@@ -44,6 +44,7 @@ MOOV.icon = function (name, cls) {
     layers: '<path d="M12 3l9 5-9 5-9-5 9-5zM3 13l9 5 9-5M3 17l9 5 9-5"/>',
     book: '<path d="M4 5a2 2 0 012-2h12v16H6a2 2 0 00-2 2V5zM8 3v14M20 3v18"/>',
     sort: '<path d="M7 4v16M7 4l-3 4M7 4l3 4M17 20V4M17 20l-3-4M17 20l3-4"/>',
+    chat: '<path d="M21 11.5a8.5 8.5 0 01-12.4 7.5L3 21l2-5.6A8.5 8.5 0 1121 11.5z"/><path d="M8 10h8M8 14h5"/>',
   }[name] || '';
   return '<svg class="i ' + (cls || '') + '" viewBox="0 0 24 24" aria-hidden="true">' + p + '</svg>';
 };

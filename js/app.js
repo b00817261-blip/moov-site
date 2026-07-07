@@ -1370,7 +1370,7 @@
      actually used, what's an Excel extract in disguise, and what can be
      retired. Data: js/reports-data.js (from the Usage Metrics Report).
      ===================================================================== */
-  const biState = { view: "find", fq: "", fcat: "all", q: "", cat: "all", tier: "all", type: "all", quick: "all", sortKey: "views", sortDir: -1 };
+  const biState = { view: "ask", fq: "", fcat: "all", q: "", cat: "all", tier: "all", type: "all", quick: "all", sortKey: "views", sortDir: -1 };
   const BI_TIERS = ["workhorse", "regular", "low", "near-zero"];
 
   const trendNum = (t) => parseFloat(String(t).replace("−", "-")) || 0;
@@ -1436,6 +1436,7 @@
 
     return `
       ${r.purpose ? `<p class="bi-purpose">${r.purpose}</p>` : ""}
+      ${r.desc && r.desc !== r.purpose ? `<p class="bi-purpose" style="margin-top:-8px;color:var(--ink-3)">${r.desc}</p>` : ""}
       ${usage}
       ${warn}${retireNote}${typeNote}${depth}
       <div class="bi-grid-sec">
@@ -1461,7 +1462,7 @@
       if (biState.tier !== "all" && r.usageTier !== biState.tier) return false;
       if (biState.type !== "all" && r.deliveryType !== biState.type) return false;
       if (q) {
-        const hay = [r.name, r.purpose || "", r.category, r.deliveryType, (r.metrics || []).join(" "), (r.pages || []).join(" ")].join(" ").toLowerCase();
+        const hay = [r.name, r.purpose || "", r.desc || "", r.category, r.deliveryType, (r.metrics || []).join(" "), (r.pages || []).join(" ")].join(" ").toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
@@ -1531,12 +1532,119 @@
     $$("#bi-type-seg button").forEach((b) => b.classList.toggle("on", b.dataset.type === biState.type));
   }
 
+  /* -- Ask: plain-English question → ranked report matches -------------
+     Keyword + synonym + intent scoring, fully client-side. Ported from
+     the team's "smartMOOV BI — Ask" page, driven by the shared dataset. */
+  const biAsk = []; // transcript of asked questions (answers are recomputed)
+  const BI_SYN = {"stuck":["ahod","hold","on dock","held","demurrage","detention","free time","dwell"],"held":["ahod","hold","on dock","held","demurrage","detention"],"port":["port","transship","dwell","terminal","ahod","dock"],"late":["delay","late","milestone","performance","eta","accuracy","on time"],"delay":["delay","late","eta","accuracy","milestone","performance"],"delayed":["delay","late","eta","accuracy","milestone"],"customs":["customs","clearance","broker","duty","declaration"],"clear":["customs","clearance","broker"],"broker":["customs","clearance","broker","performance"],"book":["booking","carrier","supplier","oncarriage","allocation"],"booking":["booking","carrier","supplier","allocation"],"carrier":["carrier","allocation","booking","scoring","shipping line"],"supplier":["supplier","po","milestone","scorecard","booking"],"forecast":["forecast","volume","teu","longterm","midterm","capacity"],"volume":["volume","forecast","teu","monthly"],"capacity":["capacity","forecast","allocation","volume","teu"],"container":["container","utilization","fill","cube","pbl","list"],"fill":["container","utilization","fill","cube"],"utilization":["container","utilization","fill","cube"],"delivery":["delivery","destination","inb","transport","milestone"],"destination":["destination","delivery","dc","milestone","inb","mot"],"invoice":["invoice","freight","finance","cost","charge"],"cost":["invoice","freight","cost","finance","charge"],"finance":["invoice","freight","finance","cost","container list"],"eta":["eta","etd","accuracy","predictive","arrival"],"arrival":["eta","arrival","early","predictive","accuracy"],"early":["early arrival","early","arrival"],"po":["po","purchase order","milestone","hod","change","resubmit"],"purchase":["po","purchase order","milestone","hod"],"milestone":["milestone","po","monitor","performance","resubmit"],"emission":["emission","co2","carbon"],"carbon":["emission","co2","carbon"],"co2":["emission","co2","carbon"],"sla":["sla","service level","performance"],"performance":["performance","kpi","scoring","scorecard","milestone"],"kpi":["kpi","performance","origin","transport"],"score":["scoring","scorecard","performance","carrier"],"reject":["rejection","booking rejection"],"rejection":["rejection","booking"],"stock":["stock on water","inventory","in transit","on water"],"inventory":["stock on water","inventory","on water"],"water":["stock on water","on water","in transit"],"telex":["telex","pending telex","release"],"release":["telex","release"],"demurrage":["demurrage","detention","free time","tracker"],"detention":["demurrage","detention","free time"],"weekly":["weekly closing","weekly","closing"],"closing":["weekly closing","closing"],"user":["report user","supplier user","user"],"who":["report user","user","access"],"consolidat":["consolidation","simulation"],"origin":["origin","kpi","volume","midterm"]};
+  const BI_STOP = new Set(["the","a","an","my","me","i","is","are","do","how","why","where","what","when","to","for","of","in","on","at","and","or","can","check","see","find","report","reports","need","want","show","get","go","which"]);
+  const BI_INTENT = [
+    { re: /(stuck|held|hold|on dock|not moving|waiting at)/, boost: { "ahod": 8, "demurrage": 6, "detention": 6, "free time": 5, "stock on water": 3 } },
+    { re: /(late|delay|behind schedule|not on time)/, boost: { "eta": 4, "milestone": 4, "delivery performance": 6, "accuracy": 4 } },
+    { re: /(cost|invoice|charge|spend|billing)/, boost: { "invoice": 6, "freight": 4, "finance": 3 } },
+    { re: /(emission|co2|carbon|green|sustainab)/, boost: { "emission": 8 } },
+    { re: /(who (uses|has access)|access|login)/, boost: { "report user": 6, "supplier user": 4 } },
+  ];
+  const BI_ASK_EXAMPLES = [
+    "Why is my container stuck at the port?",
+    "Where do I check today's carrier bookings?",
+    "How late are my deliveries?",
+    "Long term volume forecast",
+    "Freight invoice costs",
+  ];
+  function biTokens(str) {
+    return str.toLowerCase().replace(/[^a-z0-9 ]/g, " ").split(" ").filter((w) => w.length > 1 && !BI_STOP.has(w));
+  }
+  function biExpand(toks) {
+    const set = new Set(toks);
+    toks.forEach((t) => {
+      Object.keys(BI_SYN).forEach((key) => {
+        if (t.indexOf(key) === 0 || key.indexOf(t) === 0) BI_SYN[key].forEach((s) => set.add(s));
+      });
+    });
+    return [...set];
+  }
+  function biIntentBoost(qLower, r) {
+    let b = 0;
+    const name = r.name.toLowerCase();
+    const extra = ((r.desc || "") + " " + (r.keywords || "")).toLowerCase();
+    BI_INTENT.forEach((it) => {
+      if (it.re.test(qLower)) Object.keys(it.boost).forEach((frag) => {
+        if (name.indexOf(frag) >= 0 || extra.indexOf(frag) >= 0) b += it.boost[frag];
+      });
+    });
+    return b;
+  }
+  function biScoreReport(r, terms, qLower) {
+    const name = r.name.toLowerCase();
+    const hay = (r.name + " " + (r.keywords || "") + " " + (r.desc || "") + " " + (r.useWhen || "") + " " + r.category).toLowerCase();
+    let score = 0;
+    terms.forEach((t) => { if (name.indexOf(t) >= 0) score += 5; else if (hay.indexOf(t) >= 0) score += 2; });
+    score += Math.min(r.views, 2000) / 2000 * 1.2; // light nudge toward well-used reports
+    if (qLower) score += biIntentBoost(qLower, r);
+    return score;
+  }
+  function biAnswer(qRaw) {
+    const terms = biExpand(biTokens(qRaw));
+    return MOOV.bi.reports.map((r) => ({ r, s: biScoreReport(r, terms, qRaw.toLowerCase()) }))
+      .filter((x) => x.s > 1.3) // must have a real term hit beyond the usage nudge
+      .sort((a, b) => b.s - a.s)
+      .slice(0, 3);
+  }
+  const biEsc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  function biAskCard(r, best) {
+    const m = MOOV.bi.meta;
+    return `<div class="bi-ask-card ${best ? 'best' : ''}">
+      <div class="bi-fcard-top"><span class="bi-fcard-name">${r.name}</span>
+        ${best ? '<span class="bi-ask-best">Best match</span>' : ''}
+        <span class="bi-chip" style="margin:0">${r.category}</span>
+        ${r.views >= 300 ? '<span class="bi-star">popular</span>' : ''}${retireBadge(r)}
+      </div>
+      ${r.desc ? `<p class="bi-fcard-uw">${r.desc}</p>` : ''}
+      ${r.useWhen ? `<p class="bi-fcard-uw" style="margin-top:4px"><b>Use when</b> ${r.useWhen.replace(/^Use this when\s*/i, "")}</p>` : ''}
+      ${r.clickPath ? `<div class="bi-fcard-path">In smartMOOV: <b>${r.clickPath}</b></div>` : ''}
+      <div class="bi-fcard-actions" style="margin-top:2px">
+        <a class="btn btn-primary btn-sm" href="${m.smartmoovUrl}" target="_blank" rel="noopener">Open in smartMOOV ↗</a>
+        <a class="link" href="#/ops/reports/${r.id}" style="font-size:13px">Details ${I('chevron','i-sm')}</a>
+      </div>
+    </div>`;
+  }
+  function biAskAnswerHtml(q) {
+    const results = biAnswer(q);
+    if (!results.length) {
+      return `<div class="bi-msg bot"><div class="bi-msg-lead">I couldn't confidently match that to a report. Try different words (e.g. "delay", "customs", "booking", "forecast"), or use the <b>Find a report</b> tab to browse.</div></div>`;
+    }
+    return `<div class="bi-msg bot">
+      <div class="bi-msg-lead">Here's where I'd go for <i>"${biEsc(q)}"</i>:</div>
+      ${results.map((x, i) => biAskCard(x.r, i === 0)).join("")}
+    </div>`;
+  }
+  function biAskHtml() {
+    const m = MOOV.bi.meta;
+    const chips = BI_ASK_EXAMPLES.map((q) => `<button class="chip-btn bi-ask-chip">${q}</button>`).join("");
+    return `
+      <div class="bi-note info">${I('info','i-sm')} <span>This assistant matches your question against <b>${MOOV.bi.reports.length} PEPCO reports</b> using their names, topics and keywords. It runs entirely in this page — no internet, no login, nothing leaves your browser. smartMOOV has no per-report links, so every answer gives you the exact click-path.</span></div>
+      <div class="panel bi-ask-panel">
+        <div class="bi-chat" id="bi-chat">
+          <div class="bi-msg bot">
+            <div class="bi-msg-lead">Hi! Ask me something like <i>"why is my container stuck at the port?"</i> or <i>"where do I check customs clearance?"</i> and I'll point you to the right report.</div>
+            <div class="bi-ask-chips">${chips}</div>
+          </div>
+          ${biAsk.map((q) => `<div class="bi-msg user">${biEsc(q)}</div>` + biAskAnswerHtml(q)).join("")}
+        </div>
+        <div class="bi-ask-inputbar">
+          <input class="input" id="bi-ask-q" placeholder="Type your question…" autocomplete="off">
+          <button class="btn btn-primary" id="bi-ask-send">Ask ${I('arrow','i-sm')}</button>
+        </div>
+      </div>`;
+  }
+
   /* -- Find a report: task-oriented search over the same data ---------- */
   function biFindMatch(r) {
     const q = biState.fq.trim().toLowerCase();
     if (biState.fcat !== "all" && r.category !== biState.fcat) return false;
     if (!q) return true;
-    const hay = ((r.keywords || "") + " " + r.name + " " + (r.useWhen || "") + " " + r.category).toLowerCase();
+    const hay = ((r.keywords || "") + " " + r.name + " " + (r.useWhen || "") + " " + (r.desc || "") + " " + r.category).toLowerCase();
     return q.split(/\s+/).every((w) => hay.includes(w));
   }
   function biFindCard(r) {
@@ -1609,10 +1717,16 @@
     const th = (key, label, cls) => `<th class="sortable ${cls||''}" data-key="${key}">${label} <span class="dir"></span></th>`;
 
     const tabsBar = `<div class="bi-tabs">
+      <button class="bi-tab ${biState.view === 'ask' ? 'on' : ''}" data-view="ask">${I('chat','i-sm')} Ask</button>
       <button class="bi-tab ${biState.view === 'find' ? 'on' : ''}" data-view="find">${I('search','i-sm')} Find a report</button>
       <button class="bi-tab ${biState.view === 'usage' ? 'on' : ''}" data-view="usage">${I('chart','i-sm')} Usage &amp; cleanup</button>
     </div>`;
-    const head = biState.view === "find"
+    const head = biState.view === "ask"
+      ? `<div class="page-head">
+          <h1>smartMOOV BI — Ask</h1>
+          <p>Describe what you're trying to do, in plain English. It points you to the right report in the <b>${m.client}</b> workspace — with the click-path to reach it.</p>
+        </div>`
+      : biState.view === "find"
       ? `<div class="page-head">
           <h1>smartMOOV BI Catalogue — report finder</h1>
           <p>Got a question? Search what you're trying to do and it points you to the right report in the <b>${m.client}</b> workspace — with the click-path to reach it.</p>
@@ -1677,7 +1791,7 @@
           ${Object.entries(m.glossary).map(([k, v]) => `<div class="bi-gl"><span class="bi-gl-k">${k}</span><span class="bi-gl-v">${v}</span></div>`).join("")}
         </div>
       </div>`;
-    const body = head + tabsBar + (biState.view === "find" ? biFindHtml() : usageBody);
+    const body = head + tabsBar + (biState.view === "ask" ? biAskHtml() : biState.view === "find" ? biFindHtml() : usageBody);
     return opsShell("reports", "BI Catalogue", `<a href="#/ops">Operations console</a>`, body);
   }
 
@@ -1954,6 +2068,26 @@
         if (biState.view === b.dataset.view) return;
         biState.view = b.dataset.view; render();
       }));
+    }
+
+    // ask tab: question input + example chips
+    if (route.name === "opsReports" && biState.view === "ask") {
+      const input = el("bi-ask-q");
+      const chatEl = el("bi-chat");
+      const submit = (q) => {
+        if (!q || !q.trim()) return;
+        q = q.trim();
+        biAsk.push(q);
+        chatEl.insertAdjacentHTML("beforeend", `<div class="bi-msg user">${biEsc(q)}</div>` + biAskAnswerHtml(q));
+        if (input) input.value = "";
+        const last = chatEl.lastElementChild;
+        last && last.scrollIntoView({ behavior: "smooth", block: "start" });
+      };
+      const send = el("bi-ask-send");
+      send && send.addEventListener("click", () => submit(input.value));
+      input && input.addEventListener("keydown", (e) => { if (e.key === "Enter") submit(input.value); });
+      $$(".bi-ask-chip").forEach((c) => c.addEventListener("click", () => submit(c.textContent)));
+      input && input.focus();
     }
 
     // find-a-report tab: task search + category chips

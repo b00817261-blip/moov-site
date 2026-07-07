@@ -129,7 +129,8 @@ MOOV.bi = {
       "detailLevel": "structural",
       "useWhen": "Use this when you need to check or monitor carrier bookings made today.",
       "clickPath": "BI › Reports › Booking tab › PEPCO Daily Booking Carrier",
-      "keywords": "daily booking carrier booking carrier daily schedule vessel space slot you need to check or monitor carrier bookings made today booking"
+      "keywords": "daily booking carrier booking carrier daily schedule vessel space slot you need to check or monitor carrier bookings made today booking",
+      "desc": "Today's carrier bookings — vessel/space slots booked with shipping lines, monitored daily by ops."
     },
     {
       "id": "customs-broker-performance",
@@ -151,7 +152,8 @@ MOOV.bi = {
       "detailLevel": "structural",
       "useWhen": "Use this when you want to see how fast customs brokers are clearing shipments.",
       "clickPath": "BI › Reports › Operations tab › PEPCO Customs Broker Performance",
-      "keywords": "customs broker performance customs broker clearance delay performance speed you want to see how fast customs brokers are clearing shipments customs"
+      "keywords": "customs broker performance customs broker clearance delay performance speed you want to see how fast customs brokers are clearing shipments customs",
+      "desc": "How fast each customs broker clears shipments — clearance speed and delays by broker."
     },
     {
       "id": "longterm-volume-forecast",
@@ -197,7 +199,8 @@ MOOV.bi = {
       "detailLevel": "full",
       "useWhen": "Use this when you're planning long-range shipping volumes / capacity (TEU).",
       "clickPath": "BI › Reports › Forecast tab › PEPCO Longterm Volume Forecast",
-      "keywords": "longterm volume forecast forecast volume teu capacity planning long term future you're planning long-range shipping volumes / capacity (teu) forecast"
+      "keywords": "longterm volume forecast forecast volume teu capacity planning long term future you're planning long-range shipping volumes / capacity (teu) forecast",
+      "desc": "Long-range shipping volume outlook (TEU) used for capacity and space planning."
     },
     {
       "id": "midterm-volume-forecast-origin",
@@ -239,7 +242,8 @@ MOOV.bi = {
       "detailLevel": "full",
       "useWhen": "Use this when you're planning volumes over the coming weeks by origin.",
       "clickPath": "BI › Reports › Forecast tab › PEPCO Midterm Volume Forecast - Origin",
-      "keywords": "midterm volume forecast - origin forecast volume midterm origin etd week capacity you're planning volumes over the coming weeks by origin forecast"
+      "keywords": "midterm volume forecast - origin forecast volume midterm origin etd week capacity you're planning volumes over the coming weeks by origin forecast",
+      "desc": "Medium-horizon volume forecast broken down by origin/loading region."
     },
     {
       "id": "ahod-reason-code",
@@ -283,7 +287,8 @@ MOOV.bi = {
       "detailLevel": "full",
       "useWhen": "Use this when you need to know why handover dates were adjusted (AHOD reasons).",
       "clickPath": "BI › Reports › Operations tab › PEPCO AHOD Reason Code",
-      "keywords": "ahod reason code ahod handover date adjusted reason code delay po you need to know why handover dates were adjusted (ahod reasons) operations"
+      "keywords": "ahod reason code ahod handover date adjusted reason code delay po you need to know why handover dates were adjusted (ahod reasons) operations",
+      "desc": "Arrived-Held-On-Dock analysis — why containers are stuck on the dock, grouped by reason code."
     },
     {
       "id": "destination-delivery-performance",
@@ -305,7 +310,8 @@ MOOV.bi = {
       "detailLevel": "structural",
       "useWhen": "Use this when you're checking delivery performance at destination.",
       "clickPath": "BI › Reports › Operations tab › PEPCO Destination Delivery Performance",
-      "keywords": "destination delivery performance destination delivery performance dc arrival late you're checking delivery performance at destination destination"
+      "keywords": "destination delivery performance destination delivery performance dc arrival late you're checking delivery performance at destination destination",
+      "desc": "On-time delivery performance into destination DCs — actual vs planned delivery dates."
     },
     {
       "id": "destination-milestone-monitor",
@@ -327,7 +333,8 @@ MOOV.bi = {
       "detailLevel": "structural",
       "useWhen": "Use this when you're tracking destination-side milestones on shipments.",
       "clickPath": "BI › Reports › Operations tab › PEPCO Destination Milestone Monitor",
-      "keywords": "destination milestone monitor destination milestone monitor tracking status dc you're tracking destination-side milestones on shipments destination"
+      "keywords": "destination milestone monitor destination milestone monitor tracking status dc you're tracking destination-side milestones on shipments destination",
+      "desc": "Live tracking of shipments against key destination milestones (arrival, unload, in-DC)."
     },
     {
       "id": "daily-booking-supplier",
@@ -349,7 +356,8 @@ MOOV.bi = {
       "detailLevel": "structural",
       "useWhen": "Use this when you need to check supplier bookings made today.",
       "clickPath": "BI › Reports › Booking tab › PEPCO Daily Booking Supplier",
-      "keywords": "daily booking supplier booking supplier daily schedule you need to check supplier bookings made today booking"
+      "keywords": "daily booking supplier booking supplier daily schedule you need to check supplier bookings made today booking",
+      "desc": "Today's supplier-side bookings — what suppliers have booked, monitored daily."
     },
     {
       "id": "allocation-management",
@@ -371,7 +379,8 @@ MOOV.bi = {
       "detailLevel": "structural",
       "useWhen": "Use this when you're managing carrier space allocation.",
       "clickPath": "BI › Reports › Carrier tab › PEPCO Allocation Management",
-      "keywords": "allocation management allocation carrier space capacity week planning you're managing carrier space allocation carrier"
+      "keywords": "allocation management allocation carrier space capacity week planning you're managing carrier space allocation carrier",
+      "desc": "Carrier space allocation vs actual usage — how contracted allocations are being consumed."
     },
     {
       "id": "crd-and-in-dc-date-analysis",
@@ -393,7 +402,8 @@ MOOV.bi = {
       "detailLevel": "structural",
       "useWhen": "Use this when you're comparing cargo-ready dates vs arrival-at-DC dates.",
       "clickPath": "BI › Reports › Operations tab › PEPCO CRD And In-DC Date Analysis",
-      "keywords": "crd and in-dc date analysis crd cargo ready in-dc arrival date analysis delay you're comparing cargo-ready dates vs arrival-at-dc dates operations"
+      "keywords": "crd and in-dc date analysis crd cargo ready in-dc arrival date analysis delay you're comparing cargo-ready dates vs arrival-at-dc dates operations",
+      "desc": "Cargo-Ready-Date vs In-DC date — measures lead-time from readiness to arrival in the DC."
     },
     {
       "id": "container-utilization",
@@ -426,7 +436,8 @@ MOOV.bi = {
       "detailLevel": "full",
       "useWhen": "Use this when you want to check how well containers are being filled.",
       "clickPath": "BI › Reports › Operations tab › PEPCO Container Utilization",
-      "keywords": "container utilization container utilization fill efficiency cbm load you want to check how well containers are being filled operations"
+      "keywords": "container utilization container utilization fill efficiency cbm load you want to check how well containers are being filled operations",
+      "desc": "Container fill / cube utilization — how efficiently container space is being used."
     },
     {
       "id": "pbl-and-container-list",
@@ -448,7 +459,8 @@ MOOV.bi = {
       "detailLevel": "structural",
       "useWhen": "Use this when you need a list/export of PBL and containers.",
       "clickPath": "BI › Reports › Operations tab › PEPCO PBL And Container List",
-      "keywords": "pbl and container list pbl container list export extract data you need a list/export of pbl and containers operations"
+      "keywords": "pbl and container list pbl container list export extract data you need a list/export of pbl and containers operations",
+      "desc": "Working extract listing bills of lading and their containers for operational lookup."
     },
     {
       "id": "origin-kpi-report",
@@ -1611,7 +1623,8 @@ MOOV.bi = {
       "detailLevel": "structural",
       "useWhen": "Use this when you have a destination question related to destination milestone.",
       "clickPath": "BI › Reports › Operations tab › PEPCO Destination Milestone",
-      "keywords": "destination milestone destination delivery dc arrival milestone last mile destination milestone you have a destination question related to destination milestone destination"
+      "keywords": "destination milestone destination delivery dc arrival milestone last mile destination milestone you have a destination question related to destination milestone destination",
+      "desc": "Older destination-milestone view, superseded by 'Destination Milestone Monitor'."
     },
     {
       "id": "free-time-customs",
@@ -1633,7 +1646,8 @@ MOOV.bi = {
       "detailLevel": "structural",
       "useWhen": "Use this when you have a customs question related to free time - customs.",
       "clickPath": "BI › Reports › Operations tab › PEPCO Free Time - Customs",
-      "keywords": "free time - customs customs clearance broker declaration duty free time - customs you have a customs question related to free time - customs customs"
+      "keywords": "free time - customs customs clearance broker declaration duty free time - customs you have a customs question related to free time - customs customs",
+      "desc": "Demurrage/detention free-time tracking on the customs side."
     },
     {
       "id": "freight-invoices-analysis-v2",
@@ -1655,7 +1669,8 @@ MOOV.bi = {
       "detailLevel": "structural",
       "useWhen": "Use this when you have a finance question related to freight invoices analysis - v2.",
       "clickPath": "BI › Reports › Operations tab › PEPCO Freight Invoices Analysis - V2",
-      "keywords": "freight invoices analysis - v2 finance invoice cost freight charge freight invoices analysis - v2 you have a finance question related to freight invoices analysis - v2 finance"
+      "keywords": "freight invoices analysis - v2 finance invoice cost freight charge freight invoices analysis - v2 you have a finance question related to freight invoices analysis - v2 finance",
+      "desc": "Freight invoice cost breakdown — a V2 iteration that appears to have replaced an earlier version."
     },
     {
       "id": "monthly-volume-analysis-destination",
@@ -1677,7 +1692,8 @@ MOOV.bi = {
       "detailLevel": "structural",
       "useWhen": "Use this when you have a operations question related to monthly volume analysis - destination.",
       "clickPath": "BI › Reports › Operations tab › PEPCO Monthly Volume Analysis - Destination",
-      "keywords": "monthly volume analysis - destination operations shipment po milestone tracking monthly volume analysis - destination you have a operations question related to monthly volume analysis - destination operations"
+      "keywords": "monthly volume analysis - destination operations shipment po milestone tracking monthly volume analysis - destination you have a operations question related to monthly volume analysis - destination operations",
+      "desc": "Monthly shipped-volume totals rolled up by destination."
     },
     {
       "id": "seasonal-promo-tracker",
@@ -1699,7 +1715,8 @@ MOOV.bi = {
       "detailLevel": "structural",
       "useWhen": "Use this when you have a operations question related to seasonal promo tracker.",
       "clickPath": "BI › Reports › Operations tab › PEPCO Seasonal Promo Tracker",
-      "keywords": "seasonal promo tracker operations shipment po milestone tracking seasonal promo tracker you have a operations question related to seasonal promo tracker operations"
+      "keywords": "seasonal promo tracker operations shipment po milestone tracking seasonal promo tracker you have a operations question related to seasonal promo tracker operations",
+      "desc": "Tracks shipment volumes tied to seasonal promotional campaigns."
     },
     {
       "id": "transship-port-performance",
@@ -1721,7 +1738,8 @@ MOOV.bi = {
       "detailLevel": "structural",
       "useWhen": "Use this when you have a carrier question related to transship port performance.",
       "clickPath": "BI › Reports › Carrier tab › PEPCO Transship Port Performance",
-      "keywords": "transship port performance carrier shipping line performance allocation scoring transship port performance you have a carrier question related to transship port performance carrier"
+      "keywords": "transship port performance carrier shipping line performance allocation scoring transship port performance you have a carrier question related to transship port performance carrier",
+      "desc": "Dwell and handling performance at transshipment ports."
     },
     {
       "id": "longterm-volume-forecast-pk",
@@ -1743,7 +1761,8 @@ MOOV.bi = {
       "detailLevel": "structural",
       "useWhen": "Use this when you're forecasting long-range volume for PK.",
       "clickPath": "BI › Reports › Forecast tab › PEPCO Longterm Volume Forecast - PK",
-      "keywords": "longterm volume forecast - pk forecast volume planning capacity teu future longterm volume forecast - pk you're forecasting long-range volume for pk forecast"
+      "keywords": "longterm volume forecast - pk forecast volume planning capacity teu future longterm volume forecast - pk you're forecasting long-range volume for pk forecast",
+      "desc": "Long-term volume forecast filtered to Pakistan origin (country variant)."
     },
     {
       "id": "sla-report",
@@ -1775,7 +1794,8 @@ MOOV.bi = {
       "detailLevel": "full",
       "useWhen": "Use this when you're checking SLA compliance for OHA and suppliers.",
       "clickPath": "BI › Reports › Operations tab › PEPCO SLA Report",
-      "keywords": "sla report sla compliance service level kpi oha supplier you're checking sla compliance for oha and suppliers operations"
+      "keywords": "sla report sla compliance service level kpi oha supplier you're checking sla compliance for oha and suppliers operations",
+      "desc": "Service-level compliance across operations — targets met vs missed."
     },
     {
       "id": "customs-clearance-vv-log",
@@ -1797,7 +1817,8 @@ MOOV.bi = {
       "detailLevel": "structural",
       "useWhen": "Use this when you're checking customs clearance handled by VV-LOG.",
       "clickPath": "BI › Reports › Operations tab › PEPCO Customs Clearance - VV-LOG",
-      "keywords": "customs clearance - vv-log customs clearance broker declaration duty customs clearance - vv-log you're checking customs clearance handled by vv-log customs"
+      "keywords": "customs clearance - vv-log customs clearance broker declaration duty customs clearance - vv-log you're checking customs clearance handled by vv-log customs",
+      "desc": "Customs clearance status for the VV-LOG broker (broker-specific variant)."
     },
     {
       "id": "po-milestone-change",
@@ -1819,7 +1840,8 @@ MOOV.bi = {
       "detailLevel": "structural",
       "useWhen": "Use this when you have a supplier question related to po milestone change.",
       "clickPath": "BI › Reports › Supplier tab › PEPCO PO Milestone Change",
-      "keywords": "po milestone change supplier vendor performance po submission po milestone change you have a supplier question related to po milestone change supplier"
+      "keywords": "po milestone change supplier vendor performance po submission po milestone change you have a supplier question related to po milestone change supplier",
+      "desc": "Log of changes to purchase-order milestone dates."
     },
     {
       "id": "supplier-user",
@@ -1842,7 +1864,8 @@ MOOV.bi = {
       "warning": "Likely contains personal data; catalogue structure only.",
       "useWhen": "Use this when you need a raw supplier user data export.",
       "clickPath": "BI › Reports › Supplier tab › PEPCO Supplier User",
-      "keywords": "supplier user supplier vendor performance po submission supplier user you need a raw supplier user data export supplier"
+      "keywords": "supplier user supplier vendor performance po submission supplier user you need a raw supplier user data export supplier",
+      "desc": "Supplier login/access reference list — administrative, not analytical."
     },
     {
       "id": "free-time-and-preferred-routing",
@@ -1864,7 +1887,8 @@ MOOV.bi = {
       "detailLevel": "structural",
       "useWhen": "Use this when you have a carrier question related to free time and preferred routing.",
       "clickPath": "BI › Reports › Carrier tab › PEPCO Free Time and Preferred Routing",
-      "keywords": "free time and preferred routing carrier shipping line performance allocation scoring free time and preferred routing you have a carrier question related to free time and preferred routing carrier"
+      "keywords": "free time and preferred routing carrier shipping line performance allocation scoring free time and preferred routing you have a carrier question related to free time and preferred routing carrier",
+      "desc": "Combines container free-time with preferred routing choices."
     },
     {
       "id": "customs-extract",
@@ -1886,7 +1910,8 @@ MOOV.bi = {
       "detailLevel": "structural",
       "useWhen": "Use this when you need a raw customs data export.",
       "clickPath": "BI › Reports › Operations tab › PEPCO Customs Extract",
-      "keywords": "customs extract customs extract export raw data you need a raw customs data export customs"
+      "keywords": "customs extract customs extract export raw data you need a raw customs data export customs",
+      "desc": "Raw customs data extract for download/offline analysis."
     },
     {
       "id": "scoring",
@@ -1908,7 +1933,8 @@ MOOV.bi = {
       "detailLevel": "structural",
       "useWhen": "Use this when you have a operations question related to scoring.",
       "clickPath": "BI › Reports › Operations tab › PEPCO Scoring",
-      "keywords": "scoring operations shipment po milestone tracking scoring you have a operations question related to scoring operations"
+      "keywords": "scoring operations shipment po milestone tracking scoring you have a operations question related to scoring operations",
+      "desc": "Generic scoring model output — overlaps with 'Carrier Scoring'."
     },
     {
       "id": "carrier-scoring",
@@ -1949,7 +1975,8 @@ MOOV.bi = {
       "detailLevel": "full",
       "useWhen": "Use this when you have a carrier question related to carrier scoring.",
       "clickPath": "BI › Reports › Carrier tab › PEPCO Carrier Scoring",
-      "keywords": "carrier scoring carrier shipping line performance allocation scoring carrier scoring you have a carrier question related to carrier scoring carrier"
+      "keywords": "carrier scoring carrier shipping line performance allocation scoring carrier scoring you have a carrier question related to carrier scoring carrier",
+      "desc": "Ranks carriers on a composite performance score."
     },
     {
       "id": "latest-delivery-date",
@@ -1971,7 +1998,8 @@ MOOV.bi = {
       "detailLevel": "structural",
       "useWhen": "Use this when you have a destination question related to latest delivery date.",
       "clickPath": "BI › Reports › Operations tab › PEPCO Latest Delivery Date",
-      "keywords": "latest delivery date destination delivery dc arrival milestone last mile latest delivery date you have a destination question related to latest delivery date destination"
+      "keywords": "latest delivery date destination delivery dc arrival milestone last mile latest delivery date you have a destination question related to latest delivery date destination",
+      "desc": "Shows the latest committed delivery date per shipment/PO."
     },
     {
       "id": "longterm-volume-forecast-vn",
@@ -1993,7 +2021,8 @@ MOOV.bi = {
       "detailLevel": "structural",
       "useWhen": "Use this when you're forecasting long-range volume for VN.",
       "clickPath": "BI › Reports › Forecast tab › PEPCO Longterm Volume Forecast - VN",
-      "keywords": "longterm volume forecast - vn forecast volume planning capacity teu future longterm volume forecast - vn you're forecasting long-range volume for vn forecast"
+      "keywords": "longterm volume forecast - vn forecast volume planning capacity teu future longterm volume forecast - vn you're forecasting long-range volume for vn forecast",
+      "desc": "Long-term volume forecast filtered to Vietnam origin (country variant)."
     },
     {
       "id": "po-change-analysis",
@@ -2015,7 +2044,8 @@ MOOV.bi = {
       "detailLevel": "structural",
       "useWhen": "Use this when you have a operations question related to po change analysis.",
       "clickPath": "BI › Reports › Operations tab › PEPCO PO Change Analysis",
-      "keywords": "po change analysis operations shipment po milestone tracking po change analysis you have a operations question related to po change analysis operations"
+      "keywords": "po change analysis operations shipment po milestone tracking po change analysis you have a operations question related to po change analysis operations",
+      "desc": "Analyses how often and how much purchase orders change after issue."
     },
     {
       "id": "shipment-list",
@@ -2037,7 +2067,8 @@ MOOV.bi = {
       "detailLevel": "structural",
       "useWhen": "Use this when you need a raw shipment list export.",
       "clickPath": "BI › Reports › Operations tab › PEPCO Shipment List",
-      "keywords": "shipment list shipment list extract export raw data you need a raw shipment list export operations"
+      "keywords": "shipment list shipment list extract export raw data you need a raw shipment list export operations",
+      "desc": "Flat shipment-level extract for lookup/export."
     },
     {
       "id": "emissions",
@@ -2081,7 +2112,8 @@ MOOV.bi = {
       "detailLevel": "full",
       "useWhen": "Use this when you need container-level CO2 / emissions data.",
       "clickPath": "BI › Reports › Operations tab › PEPCO Emissions",
-      "keywords": "emissions emissions co2 carbon sustainability container you need container-level co2 / emissions data operations"
+      "keywords": "emissions emissions co2 carbon sustainability container you need container-level co2 / emissions data operations",
+      "desc": "CO2 / emissions estimates per shipment or lane."
     },
     {
       "id": "stock-on-water",
@@ -2103,7 +2135,8 @@ MOOV.bi = {
       "detailLevel": "structural",
       "useWhen": "Use this when you have a operations question related to stock on water.",
       "clickPath": "BI › Reports › Operations tab › PEPCO Stock On Water",
-      "keywords": "stock on water operations shipment po milestone tracking stock on water you have a operations question related to stock on water operations"
+      "keywords": "stock on water operations shipment po milestone tracking stock on water you have a operations question related to stock on water operations",
+      "desc": "Inventory value/quantity currently in transit ('on the water')."
     },
     {
       "id": "eta-data-accuracy",
@@ -2123,7 +2156,8 @@ MOOV.bi = {
       "calcBasis": "inferred",
       "useWhen": "Use this when you have a operations question related to eta data accuracy.",
       "clickPath": "BI › Reports › Operations tab › PEPCO ETA Data Accuracy",
-      "keywords": "eta data accuracy operations shipment po milestone tracking eta data accuracy you have a operations question related to eta data accuracy operations"
+      "keywords": "eta data accuracy operations shipment po milestone tracking eta data accuracy you have a operations question related to eta data accuracy operations",
+      "desc": "Measures how accurate ETA predictions were vs actual arrival."
     },
     {
       "id": "milestone-performance-destination",
@@ -2143,7 +2177,8 @@ MOOV.bi = {
       "calcBasis": "inferred",
       "useWhen": "Use this when you have a destination question related to milestone performance - destination.",
       "clickPath": "BI › Reports › Operations tab › PEPCO Milestone Performance - Destination",
-      "keywords": "milestone performance - destination destination delivery dc arrival milestone last mile milestone performance - destination you have a destination question related to milestone performance - destination destination"
+      "keywords": "milestone performance - destination destination delivery dc arrival milestone last mile milestone performance - destination you have a destination question related to milestone performance - destination destination",
+      "desc": "Destination milestone hit-rate — overlaps with the kept 'Destination Milestone Monitor'."
     },
     {
       "id": "customs-clearance-gaston-schul-internal",
@@ -2163,7 +2198,8 @@ MOOV.bi = {
       "calcBasis": "inferred",
       "useWhen": "Use this when you're checking customs clearance handled by Gaston Schul - Internal.",
       "clickPath": "BI › Reports › Operations tab › PEPCO Customs Clearance - Gaston Schul - Internal",
-      "keywords": "customs clearance - gaston schul - internal customs clearance broker declaration duty customs clearance - gaston schul - internal you're checking customs clearance handled by gaston schul - internal customs"
+      "keywords": "customs clearance - gaston schul - internal customs clearance broker declaration duty customs clearance - gaston schul - internal you're checking customs clearance handled by gaston schul - internal customs",
+      "desc": "Customs clearance status for Gaston Schul broker, internal view (broker variant)."
     },
     {
       "id": "po-milestone",
@@ -2183,7 +2219,8 @@ MOOV.bi = {
       "calcBasis": "inferred",
       "useWhen": "Use this when you have a operations question related to po milestone.",
       "clickPath": "BI › Reports › Operations tab › PEPCO PO Milestone",
-      "keywords": "po milestone operations shipment po milestone tracking po milestone you have a operations question related to po milestone operations"
+      "keywords": "po milestone operations shipment po milestone tracking po milestone you have a operations question related to po milestone operations",
+      "desc": "Purchase-order milestone tracking — overlaps with several PO reports."
     },
     {
       "id": "procurement-report",
@@ -2203,7 +2240,8 @@ MOOV.bi = {
       "calcBasis": "inferred",
       "useWhen": "Use this when you have a carrier question related to procurement report.",
       "clickPath": "BI › Reports › Carrier tab › PEPCO Procurement Report",
-      "keywords": "procurement report carrier shipping line performance allocation scoring procurement report you have a carrier question related to procurement report carrier"
+      "keywords": "procurement report carrier shipping line performance allocation scoring procurement report you have a carrier question related to procurement report carrier",
+      "desc": "Procurement/sourcing summary — carrier/rate procurement view."
     },
     {
       "id": "customs-clearance-dp-world",
@@ -2223,7 +2261,8 @@ MOOV.bi = {
       "calcBasis": "inferred",
       "useWhen": "Use this when you're checking customs clearance handled by DP World.",
       "clickPath": "BI › Reports › Operations tab › PEPCO Customs Clearance - DP World",
-      "keywords": "customs clearance - dp world customs clearance broker declaration duty customs clearance - dp world you're checking customs clearance handled by dp world customs"
+      "keywords": "customs clearance - dp world customs clearance broker declaration duty customs clearance - dp world you're checking customs clearance handled by dp world customs",
+      "desc": "Customs clearance status for the DP World broker (broker variant)."
     },
     {
       "id": "early-arrival-analysis",
@@ -2243,7 +2282,8 @@ MOOV.bi = {
       "calcBasis": "inferred",
       "useWhen": "Use this when you have a operations question related to early arrival analysis.",
       "clickPath": "BI › Reports › Operations tab › PEPCO Early Arrival Analysis",
-      "keywords": "early arrival analysis operations shipment po milestone tracking early arrival analysis you have a operations question related to early arrival analysis operations"
+      "keywords": "early arrival analysis operations shipment po milestone tracking early arrival analysis you have a operations question related to early arrival analysis operations",
+      "desc": "Flags shipments arriving earlier than planned."
     },
     {
       "id": "customs-clearance-gaston-schul-arola",
@@ -2263,7 +2303,8 @@ MOOV.bi = {
       "calcBasis": "inferred",
       "useWhen": "Use this when you're checking customs clearance handled by Gaston Schul - Arola.",
       "clickPath": "BI › Reports › Operations tab › PEPCO Customs Clearance - Gaston Schul - Arola",
-      "keywords": "customs clearance - gaston schul - arola customs clearance broker declaration duty customs clearance - gaston schul - arola you're checking customs clearance handled by gaston schul - arola customs"
+      "keywords": "customs clearance - gaston schul - arola customs clearance broker declaration duty customs clearance - gaston schul - arola you're checking customs clearance handled by gaston schul - arola customs",
+      "desc": "Customs clearance status for Gaston Schul via Arola (broker variant)."
     },
     {
       "id": "early-arrival-analysis-container-level",
@@ -2283,7 +2324,8 @@ MOOV.bi = {
       "calcBasis": "inferred",
       "useWhen": "Use this when you have a operations question related to early arrival analysis - container level.",
       "clickPath": "BI › Reports › Operations tab › PEPCO Early Arrival Analysis - Container Level",
-      "keywords": "early arrival analysis - container level operations shipment po milestone tracking early arrival analysis - container level you have a operations question related to early arrival analysis - container level operations"
+      "keywords": "early arrival analysis - container level operations shipment po milestone tracking early arrival analysis - container level you have a operations question related to early arrival analysis - container level operations",
+      "desc": "Early-arrival analysis drilled down to individual containers."
     },
     {
       "id": "manual-approval-analysis",
@@ -2303,7 +2345,8 @@ MOOV.bi = {
       "calcBasis": "inferred",
       "useWhen": "Use this when you have a operations question related to manual approval analysis.",
       "clickPath": "BI › Reports › Operations tab › PEPCO Manual Approval Analysis",
-      "keywords": "manual approval analysis operations shipment po milestone tracking manual approval analysis you have a operations question related to manual approval analysis operations"
+      "keywords": "manual approval analysis operations shipment po milestone tracking manual approval analysis you have a operations question related to manual approval analysis operations",
+      "desc": "Tracks shipments/POs that required manual approval steps."
     },
     {
       "id": "oha-management-vn",
@@ -2323,7 +2366,8 @@ MOOV.bi = {
       "calcBasis": "inferred",
       "useWhen": "Use this when you're managing the origin handling agent for VN.",
       "clickPath": "BI › Reports › Operations tab › PEPCO OHA Management - VN",
-      "keywords": "oha management - vn operations shipment po milestone tracking oha management - vn you're managing the origin handling agent for vn operations"
+      "keywords": "oha management - vn operations shipment po milestone tracking oha management - vn you're managing the origin handling agent for vn operations",
+      "desc": "Arrived-held-on-dock (OHA) management for Vietnam (country variant)."
     },
     {
       "id": "customs-clearance-kandn-medium",
@@ -2343,7 +2387,8 @@ MOOV.bi = {
       "calcBasis": "inferred",
       "useWhen": "Use this when you're checking customs clearance handled by K&N Medium.",
       "clickPath": "BI › Reports › Operations tab › PEPCO Customs Clearance - K&N Medium",
-      "keywords": "customs clearance - k&n medium customs clearance broker declaration duty customs clearance - k&n medium you're checking customs clearance handled by k&n medium customs"
+      "keywords": "customs clearance - k&n medium customs clearance broker declaration duty customs clearance - k&n medium you're checking customs clearance handled by k&n medium customs",
+      "desc": "Customs clearance status for Kuehne+Nagel (broker variant)."
     },
     {
       "id": "customs-clearance-ligentia",
@@ -2363,7 +2408,8 @@ MOOV.bi = {
       "calcBasis": "inferred",
       "useWhen": "Use this when you're checking customs clearance handled by Ligentia.",
       "clickPath": "BI › Reports › Operations tab › PEPCO Customs Clearance - Ligentia",
-      "keywords": "customs clearance - ligentia customs clearance broker declaration duty customs clearance - ligentia you're checking customs clearance handled by ligentia customs"
+      "keywords": "customs clearance - ligentia customs clearance broker declaration duty customs clearance - ligentia you're checking customs clearance handled by ligentia customs",
+      "desc": "Customs clearance status for the Ligentia broker (broker variant)."
     },
     {
       "id": "oha-management-kh",
@@ -2383,7 +2429,8 @@ MOOV.bi = {
       "calcBasis": "inferred",
       "useWhen": "Use this when you're managing the origin handling agent for KH.",
       "clickPath": "BI › Reports › Operations tab › PEPCO OHA Management - KH",
-      "keywords": "oha management - kh operations shipment po milestone tracking oha management - kh you're managing the origin handling agent for kh operations"
+      "keywords": "oha management - kh operations shipment po milestone tracking oha management - kh you're managing the origin handling agent for kh operations",
+      "desc": "Arrived-held-on-dock (OHA) management for Cambodia (country variant)."
     },
     {
       "id": "customs-clearance-customs-support",
@@ -2403,7 +2450,8 @@ MOOV.bi = {
       "calcBasis": "inferred",
       "useWhen": "Use this when you're checking customs clearance handled by Customs Support.",
       "clickPath": "BI › Reports › Operations tab › PEPCO Customs Clearance - Customs Support",
-      "keywords": "customs clearance - customs support customs clearance broker declaration duty customs clearance - customs support you're checking customs clearance handled by customs support customs"
+      "keywords": "customs clearance - customs support customs clearance broker declaration duty customs clearance - customs support you're checking customs clearance handled by customs support customs",
+      "desc": "Customs clearance status for the Customs Support broker (broker variant)."
     },
     {
       "id": "customs-clearance-ib-cargo",
@@ -2423,7 +2471,8 @@ MOOV.bi = {
       "calcBasis": "inferred",
       "useWhen": "Use this when you're checking customs clearance handled by IB Cargo.",
       "clickPath": "BI › Reports › Operations tab › PEPCO Customs Clearance - IB Cargo",
-      "keywords": "customs clearance - ib cargo customs clearance broker declaration duty customs clearance - ib cargo you're checking customs clearance handled by ib cargo customs"
+      "keywords": "customs clearance - ib cargo customs clearance broker declaration duty customs clearance - ib cargo you're checking customs clearance handled by ib cargo customs",
+      "desc": "Customs clearance status for the IB Cargo broker (broker variant)."
     },
     {
       "id": "customs-clearance-pepco-in-house-brokers",
@@ -2443,7 +2492,8 @@ MOOV.bi = {
       "calcBasis": "inferred",
       "useWhen": "Use this when you're checking customs clearance handled by Pepco In-house brokers.",
       "clickPath": "BI › Reports › Operations tab › PEPCO Customs Clearance - Pepco In-house brokers",
-      "keywords": "customs clearance - pepco in-house brokers customs clearance broker declaration duty customs clearance - pepco in-house brokers you're checking customs clearance handled by pepco in-house brokers customs"
+      "keywords": "customs clearance - pepco in-house brokers customs clearance broker declaration duty customs clearance - pepco in-house brokers you're checking customs clearance handled by pepco in-house brokers customs",
+      "desc": "Customs clearance handled by PEPCO's in-house brokers (broker variant)."
     },
     {
       "id": "freightower-transit-leg-extract",
@@ -2463,7 +2513,8 @@ MOOV.bi = {
       "calcBasis": "n/a",
       "useWhen": "Use this when you need a raw transit-leg data export.",
       "clickPath": "BI › Reports › Operations tab › PEPCO Freightower Transit Leg Extract",
-      "keywords": "freightower transit leg extract transit leg freightower extract raw data export you need a raw transit-leg data export operations"
+      "keywords": "freightower transit leg extract transit leg freightower extract raw data export you need a raw transit-leg data export operations",
+      "desc": "Transit-leg-level data extract from the Freightower system."
     },
     {
       "id": "customs-clearance-mpu",
@@ -2483,7 +2534,8 @@ MOOV.bi = {
       "calcBasis": "inferred",
       "useWhen": "Use this when you're checking customs clearance handled by MPU.",
       "clickPath": "BI › Reports › Operations tab › PEPCO Customs Clearance - MPU",
-      "keywords": "customs clearance - mpu customs clearance broker declaration duty customs clearance - mpu you're checking customs clearance handled by mpu customs"
+      "keywords": "customs clearance - mpu customs clearance broker declaration duty customs clearance - mpu you're checking customs clearance handled by mpu customs",
+      "desc": "Customs clearance status for the MPU broker (broker variant)."
     },
     {
       "id": "historical-eta",
@@ -2503,7 +2555,8 @@ MOOV.bi = {
       "calcBasis": "inferred",
       "useWhen": "Use this when you need historical ETA records.",
       "clickPath": "BI › Reports › Operations tab › PEPCO Historical ETA",
-      "keywords": "historical eta historical eta past history arrival you need historical eta records operations"
+      "keywords": "historical eta historical eta past history arrival you need historical eta records operations",
+      "desc": "Archive of past ETA values — largely superseded by 'Predictive ETA'."
     },
     {
       "id": "longterm-volume-forecast-kh",
@@ -2523,7 +2576,8 @@ MOOV.bi = {
       "calcBasis": "inferred",
       "useWhen": "Use this when you're forecasting long-range volume for KH.",
       "clickPath": "BI › Reports › Forecast tab › PEPCO Longterm Volume Forecast - KH",
-      "keywords": "longterm volume forecast - kh forecast volume planning capacity teu future longterm volume forecast - kh you're forecasting long-range volume for kh forecast"
+      "keywords": "longterm volume forecast - kh forecast volume planning capacity teu future longterm volume forecast - kh you're forecasting long-range volume for kh forecast",
+      "desc": "Long-term volume forecast filtered to Cambodia origin (country variant)."
     },
     {
       "id": "oha-management",
@@ -2543,7 +2597,8 @@ MOOV.bi = {
       "calcBasis": "inferred",
       "useWhen": "Use this when you're managing the origin handling agent for a country.",
       "clickPath": "BI › Reports › Operations tab › PEPCO OHA Management",
-      "keywords": "oha management operations shipment po milestone tracking oha management you're managing the origin handling agent for a country operations"
+      "keywords": "oha management operations shipment po milestone tracking oha management you're managing the origin handling agent for a country operations",
+      "desc": "Base arrived-held-on-dock management view (country variants split off from this)."
     },
     {
       "id": "daily-booking-oncarriage",
@@ -2563,7 +2618,8 @@ MOOV.bi = {
       "calcBasis": "inferred",
       "useWhen": "Use this when you have a booking question related to daily booking oncarriage.",
       "clickPath": "BI › Reports › Booking tab › PEPCO Daily Booking Oncarriage",
-      "keywords": "daily booking oncarriage booking carrier supplier schedule slot daily booking oncarriage you have a booking question related to daily booking oncarriage booking"
+      "keywords": "daily booking oncarriage booking carrier supplier schedule slot daily booking oncarriage you have a booking question related to daily booking oncarriage booking",
+      "desc": "Daily bookings for the on-carriage (final inland) leg."
     },
     {
       "id": "predictive-eta",
@@ -2583,7 +2639,8 @@ MOOV.bi = {
       "calcBasis": "inferred",
       "useWhen": "Use this when you want the predicted arrival (PETA) model output.",
       "clickPath": "BI › Reports › Operations tab › PEPCO Predictive ETA",
-      "keywords": "predictive eta predictive eta peta prediction arrival mae bias you want the predicted arrival (peta) model output operations"
+      "keywords": "predictive eta predictive eta peta prediction arrival mae bias you want the predicted arrival (peta) model output operations",
+      "desc": "Model-based predicted arrival times for in-transit shipments."
     },
     {
       "id": "oha-management-tr",
@@ -2603,7 +2660,8 @@ MOOV.bi = {
       "calcBasis": "inferred",
       "useWhen": "Use this when you're managing the origin handling agent for TR.",
       "clickPath": "BI › Reports › Operations tab › PEPCO OHA Management - TR",
-      "keywords": "oha management - tr operations shipment po milestone tracking oha management - tr you're managing the origin handling agent for tr operations"
+      "keywords": "oha management - tr operations shipment po milestone tracking oha management - tr you're managing the origin handling agent for tr operations",
+      "desc": "Arrived-held-on-dock (OHA) management for Turkey (country variant)."
     },
     {
       "id": "chinese-new-year",
@@ -2623,7 +2681,8 @@ MOOV.bi = {
       "calcBasis": "inferred",
       "useWhen": "Use this when you have a operations question related to chinese new year.",
       "clickPath": "BI › Reports › Operations tab › PEPCO Chinese New Year",
-      "keywords": "chinese new year operations shipment po milestone tracking chinese new year you have a operations question related to chinese new year operations"
+      "keywords": "chinese new year operations shipment po milestone tracking chinese new year you have a operations question related to chinese new year operations",
+      "desc": "One-off view of CNY-period volume/capacity impact — seasonal, likely stale."
     },
     {
       "id": "consolidation-simulation",
@@ -2643,7 +2702,8 @@ MOOV.bi = {
       "calcBasis": "inferred",
       "useWhen": "Use this when you have a operations question related to consolidation simulation.",
       "clickPath": "BI › Reports › Operations tab › PEPCO Consolidation Simulation",
-      "keywords": "consolidation simulation operations shipment po milestone tracking consolidation simulation you have a operations question related to consolidation simulation operations"
+      "keywords": "consolidation simulation operations shipment po milestone tracking consolidation simulation you have a operations question related to consolidation simulation operations",
+      "desc": "What-if tool simulating cargo consolidation scenarios."
     },
     {
       "id": "longterm-volume-forecast-tr",
@@ -2663,7 +2723,8 @@ MOOV.bi = {
       "calcBasis": "inferred",
       "useWhen": "Use this when you're forecasting long-range volume for TR.",
       "clickPath": "BI › Reports › Forecast tab › PEPCO Longterm Volume Forecast - TR",
-      "keywords": "longterm volume forecast - tr forecast volume planning capacity teu future longterm volume forecast - tr you're forecasting long-range volume for tr forecast"
+      "keywords": "longterm volume forecast - tr forecast volume planning capacity teu future longterm volume forecast - tr you're forecasting long-range volume for tr forecast",
+      "desc": "Long-term volume forecast filtered to Turkey origin (country variant)."
     },
     {
       "id": "sheet1",
@@ -2683,7 +2744,8 @@ MOOV.bi = {
       "calcBasis": "n/a",
       "useWhen": "Use this when you need a raw sheet1 data export.",
       "clickPath": "BI › Reports › Operations tab › PEPCO sheet1",
-      "keywords": "sheet1 operations shipment po milestone tracking sheet1 you need a raw sheet1 data export operations"
+      "keywords": "sheet1 operations shipment po milestone tracking sheet1 you need a raw sheet1 data export operations",
+      "desc": "Untitled/placeholder report — almost certainly a leftover draft to delete."
     }
   ]
 };
