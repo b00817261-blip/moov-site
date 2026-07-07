@@ -40,6 +40,11 @@ MOOV.icon = function (name, cls) {
     pin: '<path d="M12 21s7-6 7-11a7 7 0 10-14 0c0 5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/>',
     trend: '<path d="M3 17l6-6 4 4 8-8M21 7v5M21 7h-5"/>',
     dollar: '<path d="M12 2v20M17 6a4 4 0 00-4-2H10a3 3 0 000 6h4a3 3 0 010 6h-3a4 4 0 01-4-2"/>',
+    chart: '<path d="M4 20V4M4 20h16M8 20v-6M12 20V9M16 20v-9M20 20V6"/>',
+    layers: '<path d="M12 3l9 5-9 5-9-5 9-5zM3 13l9 5 9-5M3 17l9 5 9-5"/>',
+    book: '<path d="M4 5a2 2 0 012-2h12v16H6a2 2 0 00-2 2V5zM8 3v14M20 3v18"/>',
+    sort: '<path d="M7 4v16M7 4l-3 4M7 4l3 4M17 20V4M17 20l-3-4M17 20l3-4"/>',
+    chat: '<path d="M21 11.5a8.5 8.5 0 01-12.4 7.5L3 21l2-5.6A8.5 8.5 0 1121 11.5z"/><path d="M8 10h8M8 14h5"/>',
   }[name] || '';
   return '<svg class="i ' + (cls || '') + '" viewBox="0 0 24 24" aria-hidden="true">' + p + '</svg>';
 };

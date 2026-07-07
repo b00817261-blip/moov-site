@@ -112,14 +112,66 @@ A "Demo: switch view" link in each sidebar jumps between the two.
   file and to the expert's calendar cell, which shows the contact and
   headcount (e.g. "Ola Nowak +2").
 
+### 5. smartMOOV BI Catalogue (Ops console)
+- **BI Catalogue** (`#/ops/reports`) — three windows over the same data:
+  an **"Ask"** assistant, a **"Find a report"** finder and a
+  **"Usage & cleanup"** inventory of the **PEPCO Power BI workspace**
+  (106 reports across 10 categories, ranked by **actual views** from the
+  Usage Metrics Report, 6 Jun – 5 Jul 2026). Built to answer four questions:
+  *what are we actually using, what's genuinely there for the client, what's
+  just used as a data download, and where are the big datasets*.
+- **Ask** — a chat-style assistant: type a plain-English question ("why is
+  my container stuck at the port?") and it ranks the three best-matching
+  reports using keyword + synonym + intent scoring (e.g. *stuck* → AHOD,
+  demurrage, detention), with a whole-phrase bonus so typing a report's name
+  finds that report. Fully client-side — nothing leaves the browser. Answers
+  show the description, when to use it, the click-path and an Open in
+  smartMOOV button.
+- **Two clients** — the catalogue covers **PEPCO** (106 reports, full usage
+  metrics) and **Lidl** (23 reports incl. the LIDL FOOD family, directory
+  only — descriptions tagged *verified* from the live report's tabs or
+  *inferred* from the name). Ask and Find cover both, with client badges and
+  a client filter; Usage & cleanup stays PEPCO-scoped until Lidl's usage
+  report is pulled.
+- **Find a report** — task-oriented search ("customs delay", "container
+  fill", "late supplier"…) over names, topics and keywords. Every card gives
+  a *"Use this when…"* sentence, the **click-path inside smartMOOV**
+  (BI › Reports › tab › report), delivery-type badge, view count, and an
+  **Open in smartMOOV** button; category chips filter the sections.
+- **Landing summary** — 108 active reports, 12,336 views, only 4 viewers,
+  a −1.2% view trend, ~3 s typical open — plus "the story": usage is
+  extremely concentrated (7 workhorses take ~60% of all views; 29 reports sit
+  under 20 views).
+- **Usage tier buckets** — Workhorses (>400 views) / Regular (100–400) /
+  Low (20–100) / Near-zero (<20); each bucket is clickable and filters the
+  table.
+- **Dashboard vs Extract vs Hybrid** — every report is classified by
+  `deliveryType`, with `hasRawDataPage` flagged where a dashboard carries a
+  downloadable Raw Data page behind it. Extracts don't need dashboard
+  maintenance — filter to them in one click.
+- **One-click views** — **Retirement candidates** (29 near-zero reports:
+  "sheet1", per-broker Customs Clearance variants, per-country forecast
+  splits…) and **Big datasets / extracts** (32 direct dataset sources).
+- **Sortable ranked table** — sort by views, trend, users or name; live
+  search; category and type filters; every row expands to usage facts
+  (views, trend, users, active days) plus pages/metrics/slicers/calculation
+  for the reports that warrant it. Near-zero reports deliberately carry
+  usage + classification only.
+- **Honest caveats** — usage was read on screen (single digits approximate),
+  4-user sample, PEPCO-scoped only; calculation logic tagged **Documented**
+  vs **Inferred** since DAX isn't browser-extractable.
+- **Privacy** — access-directory reports (Report User, Supplier User) are
+  catalogued by structure only; **no personal data (emails) is stored**.
+
 ## Project structure
 
 ```
-index.html        # shell + font + SPA mount
-css/styles.css    # design system & all screen styles
-js/data.js        # fictional data (services, experts, slots, shipments, alerts)
-js/icons.js       # inline SVG icon set
-js/app.js         # hash router + all views + interactions
+index.html            # shell + font + SPA mount
+css/styles.css        # design system & all screen styles
+js/data.js            # fictional data (services, experts, slots, shipments, alerts)
+js/reports-data.js    # smartMOOV BI Catalogue data (MOOV.bi — meta + 67 reports)
+js/icons.js           # inline SVG icon set
+js/app.js             # hash router + all views + interactions
 ```
 
 ## Notes
