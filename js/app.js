@@ -549,6 +549,7 @@
           ${navItem('#/ops/shipments','box','All shipments','shipments', openExceptions ? openExceptions : '')}
           ${navItem('#/ops/clients','building','Clients','clients')}
           ${navItem('#/ops/schedule','calendar','My schedule','schedule', Object.values(MOOV.schedule[MOOV.session.expert || 'elodie'].entries).filter(e=>e.state==='booked').length)}
+          ${navItem('#/ops/reports','chart','BI Catalogue','reports')}
         </nav>
         <div class="side-foot">
           <div class="side-user">
@@ -1364,6 +1365,196 @@
   }
 
   /* =====================================================================
+     VIEW: BI CATALOGUE
+     A browsable catalogue of PEPCO's Power BI reports in the smartMOOV
+     hub — searchable, filterable by category & tier, collapsible per card.
+     ===================================================================== */
+  const CAT_ICON = {
+    Forecast: "trend", General: "users", Booking: "calendar", Supplier: "building",
+    Carrier: "ship", ASN: "doc", Operations: "hub",
+  };
+  /* live filter state — survives grid re-renders within the catalogue */
+  const biState = { q: "", cat: "all", tier: "all", sort: "tier" };
+
+  function calcBadge(basis) {
+    if (basis === "documented") return `<span class="bi-badge doc" title="Calculation shown on the report's own Notes / KPI Definitions page">${I('check','i-sm')} Documented</span>`;
+    if (basis === "inferred") return `<span class="bi-badge inf" title="Calculation inferred from labels — DAX not extractable">${I('info','i-sm')} Inferred</span>`;
+    return `<span class="bi-badge na" title="No calculated measures — raw extract or directory">Raw / n·a</span>`;
+  }
+  function tierBadge(tier) {
+    const t = MOOV.bi.meta.tiers[tier];
+    return `<span class="bi-tier t${tier}" title="${t.label}: ${t.blurb}"><span class="bi-tier-dot"></span>Tier ${tier}</span>`;
+  }
+  function catBadge(cat) {
+    return `<span class="bi-cat" data-cat="${cat}">${I(CAT_ICON[cat] || 'grid','i-sm')} ${cat}</span>`;
+  }
+
+  /* the inner detail — shared by the collapsible card and the detail page */
+  function reportDetailBody(r) {
+    const chips = (arr) => arr.map((x) => `<span class="bi-chip">${x}</span>`).join("");
+    const section = (label, html) => html ? `<div class="bi-sec"><div class="bi-sec-k">${label}</div><div class="bi-sec-v">${html}</div></div>` : "";
+    const list = (arr) => `<ul class="bi-list">${arr.map((x) => `<li>${x}</li>`).join("")}</ul>`;
+
+    const variant = r.variantOf ? (() => {
+      const base = MOOV.bi.reportById(r.variantOf);
+      return `<div class="bi-note info">${I('info','i-sm')} Client-styled “- Pepco” layout of <a class="link" href="#/ops/reports/${r.variantOf}">${base ? base.name : r.variantOf}</a> — same underlying dataset, alternate styling.</div>`;
+    })() : "";
+
+    const warn = r.warning ? `<div class="bi-note warn">${I('warn','i-sm')} ${r.warning}</div>` : "";
+
+    const structural = r.detailLevel === "structural"
+      ? `<div class="bi-note">${I('layers','i-sm')} Structural capture only — page-level metric detail pending owner confirmation.</div>`
+      : "";
+
+    const calc = section("Calculation",
+      `${calcBadge(r.calcBasis)}${r.calcDetail ? `<div class="bi-calc">${r.calcDetail}</div>` : ""}`);
+
+    return `
+      <p class="bi-purpose">${r.purpose}</p>
+      ${warn}${variant}${structural}
+      <div class="bi-grid-sec">
+        ${section("Pages", r.pages && r.pages.length ? chips(r.pages) : "")}
+        ${section("Key metrics", r.metrics && r.metrics.length ? list(r.metrics) : "")}
+        ${section("Visuals", r.visuals && r.visuals.length ? list(r.visuals) : "")}
+        ${section("Table columns", r.tableColumns && r.tableColumns.length ? chips(r.tableColumns) : "")}
+        ${section("Slicers / filters", r.slicers && r.slicers.length ? chips(r.slicers) : "")}
+        ${section("Granularity", r.granularity ? r.granularity : "")}
+        ${calc}
+        ${section("Sample data", r.sampleData ? `<span class="bi-sample">${r.sampleData}</span>` : "")}
+      </div>`;
+  }
+
+  function reportCard(r) {
+    return `
+      <details class="bi-card" data-id="${r.id}">
+        <summary class="bi-card-head">
+          <div class="bi-card-title">
+            <div class="bi-name">${r.name}${r.variantOf ? `<span class="bi-variant">Pepco layout</span>` : ""}</div>
+            <div class="bi-badges">${catBadge(r.category)} ${tierBadge(r.tier)} ${calcBadge(r.calcBasis)}</div>
+          </div>
+          <span class="bi-caret">${I('chevron','i-sm')}</span>
+        </summary>
+        <div class="bi-card-body">
+          ${reportDetailBody(r)}
+          <div class="bi-card-foot"><a class="link" href="#/ops/reports/${r.id}">Open full page ${I('arrow','i-sm')}</a></div>
+        </div>
+      </details>`;
+  }
+
+  function biFilteredReports() {
+    const q = biState.q.trim().toLowerCase();
+    let list = MOOV.bi.reports.filter((r) => {
+      if (biState.cat !== "all" && r.category !== biState.cat) return false;
+      if (biState.tier !== "all" && String(r.tier) !== biState.tier) return false;
+      if (q) {
+        const hay = [r.name, r.purpose, r.category, "tier " + r.tier, (r.metrics || []).join(" "), (r.pages || []).join(" ")]
+          .join(" ").toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+    const catOrder = MOOV.bi.meta.categories;
+    if (biState.sort === "alpha") list.sort((a, b) => a.name.localeCompare(b.name));
+    else if (biState.sort === "category") list.sort((a, b) =>
+      catOrder.indexOf(a.category) - catOrder.indexOf(b.category) || a.tier - b.tier || a.name.localeCompare(b.name));
+    else list.sort((a, b) => a.tier - b.tier || catOrder.indexOf(a.category) - catOrder.indexOf(b.category) || a.name.localeCompare(b.name));
+    return list;
+  }
+
+  function renderBiGrid() {
+    const wrap = el("bi-grid");
+    if (!wrap) return;
+    const list = biFilteredReports();
+    const count = el("bi-count");
+    if (count) count.textContent = list.length + " of " + MOOV.bi.reports.length + " reports";
+    wrap.innerHTML = list.length
+      ? list.map((r) => reportCard(r)).join("")
+      : `<div class="bi-empty">${I('search')} <b>No reports match.</b><p>Try clearing the search or a filter.</p></div>`;
+  }
+
+  function viewReports() {
+    const m = MOOV.bi.meta;
+    const tierLegend = [1, 2, 3].map((t) => {
+      const info = m.tiers[t];
+      return `<div class="bi-legend-item">
+        ${tierBadge(t)}
+        <div><b>${info.label}</b> <span class="muted">· ${MOOV.bi.countByTier(t)} reports</span><div class="muted" style="font-size:12.5px;margin-top:2px">${info.blurb}</div></div>
+      </div>`;
+    }).join("");
+
+    const catSeg = [`<button class="${biState.cat==='all'?'on':''}" data-cat="all">All</button>`]
+      .concat(m.categories.map((c) => `<button class="${biState.cat===c?'on':''}" data-cat="${c}">${c} <span class="bi-seg-n">${MOOV.bi.countByCategory(c)}</span></button>`))
+      .join("");
+    const tierSeg = [`<button class="${biState.tier==='all'?'on':''}" data-tier="all">All tiers</button>`]
+      .concat([1, 2, 3].map((t) => `<button class="${biState.tier===String(t)?'on':''}" data-tier="${t}">Tier ${t}</button>`))
+      .join("");
+
+    const body = `
+      <div class="page-head">
+        <h1>smartMOOV BI Catalogue</h1>
+        <p>Every Power BI report MOOV delivers to <b>${m.client}</b> in the smartMOOV hub — ${MOOV.bi.reports.length} reports across ${m.categories.length} categories. Search, filter and expand any card for its metrics and calculation basis.</p>
+      </div>
+
+      <div class="bi-context">
+        <div class="bi-ctx-cards">
+          <div class="bi-ctx"><div class="bi-ctx-k">${I('hub','i-sm')} System</div><div class="bi-ctx-v">${m.system}</div></div>
+          <div class="bi-ctx"><div class="bi-ctx-k">${I('clock','i-sm')} Refresh</div><div class="bi-ctx-v">${m.refreshCadence}</div></div>
+          <div class="bi-ctx"><div class="bi-ctx-k">${I('box','i-sm')} Data scope</div><div class="bi-ctx-v">${m.dataScope}</div></div>
+        </div>
+        <div class="bi-note info" style="margin-top:14px">${I('info','i-sm')} ${m.calcNote} Each card is tagged <b>Documented</b> or <b>Inferred</b> accordingly. ${m.pepcoVariantNote}</div>
+        <div class="bi-legend">${tierLegend}</div>
+      </div>
+
+      <div class="table-wrap" style="margin-top:18px">
+        <div class="table-toolbar" style="gap:12px">
+          <div class="searchbox" style="min-width:220px">${I('search','i-sm')}<input id="bi-search" placeholder="Search reports, metrics, pages…" value="${biState.q.replace(/"/g,'&quot;')}"></div>
+          <div class="seg" id="bi-tier-seg">${tierSeg}</div>
+          <div class="spacer" style="flex:1"></div>
+          <label class="bi-sort">${I('sort','i-sm')}<select class="select" id="bi-sort">
+            <option value="tier" ${biState.sort==='tier'?'selected':''}>Sort: Tier</option>
+            <option value="category" ${biState.sort==='category'?'selected':''}>Sort: Category</option>
+            <option value="alpha" ${biState.sort==='alpha'?'selected':''}>Sort: A–Z</option>
+          </select></label>
+        </div>
+        <div class="bi-cat-seg-wrap"><div class="seg bi-cat-seg" id="bi-cat-seg">${catSeg}</div></div>
+      </div>
+
+      <div class="bi-toolbar-meta"><span id="bi-count" class="muted"></span></div>
+      <div class="bi-grid" id="bi-grid"></div>
+
+      <div class="panel" style="margin-top:22px">
+        <div class="p-head"><h3>${I('book','i-sm')} Shared glossary</h3><span class="muted" style="font-size:13px">Identical across all reports</span></div>
+        <div class="bi-glossary">
+          ${Object.entries(m.glossary).map(([k, v]) => `<div class="bi-gl"><span class="bi-gl-k">${k}</span><span class="bi-gl-v">${v}</span></div>`).join("")}
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:18px">
+        <div class="p-head"><h3>${I('layers','i-sm')} Order status categories</h3><span class="muted" style="font-size:13px">${m.orderStatusCategories.length} states</span></div>
+        <div class="bi-status-list">${m.orderStatusCategories.map((s) => `<span class="bi-chip">${s}</span>`).join("")}</div>
+      </div>`;
+    return opsShell("reports", "BI Catalogue", `<a href="#/ops">Operations console</a>`, body);
+  }
+
+  function viewReportDetail(id) {
+    const r = MOOV.bi.reportById(id);
+    if (!r) {
+      return opsShell("reports", "Not found", `<a href="#/ops/reports">BI Catalogue</a>`,
+        `<div class="panel"><p>Report <b>${id}</b> was not found. <a class="link" href="#/ops/reports">Back to the catalogue</a></p></div>`);
+    }
+    const body = `
+      <a class="back-link" href="#/ops/reports">${I('chevleft','i-sm')} BI Catalogue</a>
+      <div class="detail-head" style="align-items:flex-start">
+        <div class="dh-main">
+          <h1>${r.name}</h1>
+          <div class="bi-badges" style="margin-top:12px">${catBadge(r.category)} ${tierBadge(r.tier)} ${calcBadge(r.calcBasis)}</div>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:6px">${reportDetailBody(r)}</div>`;
+    return opsShell("reports", r.name, `<a href="#/ops/reports">BI Catalogue</a>`, body);
+  }
+
+  /* =====================================================================
      ROUTER
      ===================================================================== */
   function parseHash() {
@@ -1393,13 +1584,15 @@
       if (parts[1] === "shipments") return { name: "opsShipments", params };
       if (parts[1] === "clients") return { name: "opsClients", params };
       if (parts[1] === "schedule") return { name: "opsSchedule", params };
+      if (parts[1] === "reports" && parts[2]) return { name: "opsReport", id: decodeURIComponent(parts[2]), params };
+      if (parts[1] === "reports") return { name: "opsReports", params };
       return { name: "opsQueue", params };
     }
     return { name: "login" };
   }
 
   const CLIENT_ROUTES = ["overview", "shipments", "shipment", "bookings", "documents", "invoices", "messages"];
-  const OPS_ROUTES = ["opsQueue", "opsShipments", "opsShipment", "opsClients", "opsSchedule"];
+  const OPS_ROUTES = ["opsQueue", "opsShipments", "opsShipment", "opsClients", "opsSchedule", "opsReports", "opsReport"];
 
   function render() {
     const route = parseHash();
@@ -1423,6 +1616,8 @@
       case "opsShipment": html = viewShipmentDetail(route.id, true); break;
       case "opsClients": html = viewOpsClients(); break;
       case "opsSchedule": html = viewOpsSchedule(); break;
+      case "opsReports": html = viewReports(p); break;
+      case "opsReport": html = viewReportDetail(route.id); break;
       default: html = viewLogin();
     }
     app.innerHTML = html;
@@ -1606,6 +1801,25 @@
       });
       const sel = el("sched-expert");
       sel && sel.addEventListener("change", () => { MOOV.session.expert = sel.value; render(); });
+    }
+
+    // BI catalogue: search, category/tier filters, sort
+    if (route.name === "opsReports") {
+      renderBiGrid();
+      const search = el("bi-search");
+      if (search) search.addEventListener("input", () => { biState.q = search.value; renderBiGrid(); });
+      $$("#bi-cat-seg button").forEach((b) => b.addEventListener("click", () => {
+        biState.cat = b.dataset.cat;
+        $$("#bi-cat-seg button").forEach((x) => x.classList.toggle("on", x === b));
+        renderBiGrid();
+      }));
+      $$("#bi-tier-seg button").forEach((b) => b.addEventListener("click", () => {
+        biState.tier = b.dataset.tier;
+        $$("#bi-tier-seg button").forEach((x) => x.classList.toggle("on", x === b));
+        renderBiGrid();
+      }));
+      const sort = el("bi-sort");
+      if (sort) sort.addEventListener("change", () => { biState.sort = sort.value; renderBiGrid(); });
     }
 
     // ops shipments: client switcher

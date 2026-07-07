@@ -112,14 +112,40 @@ A "Demo: switch view" link in each sidebar jumps between the two.
   file and to the expert's calendar cell, which shows the contact and
   headcount (e.g. "Ola Nowak +2").
 
+### 5. smartMOOV BI Catalogue (Ops console)
+- **BI Catalogue** (`#/ops/reports`) — a browsable catalogue of the **Power
+  BI reports MOOV delivers to PEPCO** in the smartMOOV logistics hub: 67
+  reports across 7 categories (Forecast, General, Booking, Supplier, Carrier,
+  ASN, Operations).
+- **Context header** — the system (Power BI embedded via `getBIReportUrl`),
+  refresh cadence (4×/day), data scope (order-level, excludes cancelled), and
+  a **3-tier importance legend** tailored to a supply-chain operator
+  (operational core / supporting analysis / raw extracts & admin).
+- **Live filtering** — text search (name, purpose, metrics, pages), a
+  **category** segmented control (with per-category counts), a **tier**
+  filter, and **sort** by tier / category / A–Z. The grid re-renders in place.
+- **Collapsible report cards** — each card shows category, tier and
+  calculation badges; expanding it reveals pages, key metrics, visuals, table
+  columns, slicers, granularity, sample data, and the **calculation basis**.
+  Since DAX measures aren't browser-extractable, every calculation is tagged
+  **Documented** (shown on the report's own Notes/KPI Definitions page) or
+  **Inferred** (read from labels) — honest about depth. Reports captured only
+  at page-level are flagged *"structural capture only"*.
+- **Deep-linkable detail pages** (`#/ops/reports/:id`) and a shared
+  **glossary** + **order-status** reference at the foot of the catalogue.
+- **Privacy** — access-directory reports (Report User, Supplier User) are
+  catalogued by structure only; **no personal data (emails) is stored** in the
+  data layer.
+
 ## Project structure
 
 ```
-index.html        # shell + font + SPA mount
-css/styles.css    # design system & all screen styles
-js/data.js        # fictional data (services, experts, slots, shipments, alerts)
-js/icons.js       # inline SVG icon set
-js/app.js         # hash router + all views + interactions
+index.html            # shell + font + SPA mount
+css/styles.css        # design system & all screen styles
+js/data.js            # fictional data (services, experts, slots, shipments, alerts)
+js/reports-data.js    # smartMOOV BI Catalogue data (MOOV.bi — meta + 67 reports)
+js/icons.js           # inline SVG icon set
+js/app.js             # hash router + all views + interactions
 ```
 
 ## Notes
