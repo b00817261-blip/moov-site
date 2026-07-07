@@ -1370,7 +1370,10 @@
      actually used, what's an Excel extract in disguise, and what can be
      retired. Data: js/reports-data.js (from the Usage Metrics Report).
      ===================================================================== */
-  const biState = { view: "ask", fq: "", fcat: "all", fclient: "all", q: "", cat: "all", tier: "all", type: "all", quick: "all", sortKey: "views", sortDir: -1 };
+  const biState = { client: "PEPCO", view: "ask", fq: "", fcat: "all", q: "", cat: "all", tier: "all", type: "all", quick: "all", sortKey: "views", sortDir: -1 };
+  const biClientReports = () => MOOV.bi.reports.filter((r) => r.client === biState.client);
+  const biClientHasUsage = () => biClientReports().some((r) => typeof r.views === "number");
+  const cleanUseWhen = (s) => (s || "").replace(/^Use\s+(this\s+)?when\s*/i, "");
   const BI_TIERS = ["workhorse", "regular", "low", "near-zero"];
 
   const trendNum = (t) => parseFloat(String(t).replace("−", "-")) || 0;
@@ -1407,7 +1410,6 @@
       ? `<span class="bi-badge doc" title="Description and page list verified from the live report's tabs">${I('check','i-sm')} Verified</span>`
       : `<span class="bi-badge inf" title="Description inferred from the report name — not yet checked against the live report">${I('info','i-sm')} Inferred</span>`;
   }
-  const biPepco = () => MOOV.bi.reports.filter((r) => r.client === "PEPCO");
 
   /* the expanded detail — shared by the table rows and the detail page */
   function reportDetailBody(r) {
@@ -1457,7 +1459,7 @@
       ${usage}
       ${warn}${retireNote}${typeNote}${depth}
       <div class="bi-grid-sec">
-        ${section("Use this when", r.useWhen || "")}
+        ${section("Use this when", cleanUseWhen(r.useWhen))}
         ${section("Where in smartMOOV", r.clickPath ? `<span class="bi-path">${r.clickPath}</span><a class="link" href="${m.smartmoovUrl}" target="_blank" rel="noopener" style="margin-left:10px;white-space:nowrap">Open in smartMOOV ↗</a>` : "")}
         ${section("Pages", r.pages && r.pages.length ? chips(r.pages) : "")}
         ${section("Key metrics", r.metrics && r.metrics.length ? list(r.metrics) : "")}
@@ -1472,7 +1474,7 @@
 
   function biFiltered() {
     const q = biState.q.trim().toLowerCase();
-    let list = biPepco().filter((r) => { // usage metrics exist for PEPCO only
+    let list = biClientReports().filter((r) => {
       if (biState.quick === "retire" && r.retirement === "no") return false;
       if (biState.quick === "datasets" && !MOOV.bi.isBigDataset(r)) return false;
       if (biState.cat !== "all" && r.category !== biState.cat) return false;
@@ -1520,11 +1522,11 @@
     const tbody = el("bi-tbody");
     if (!tbody) return;
     const list = biFiltered();
-    const maxViews = Math.max(...biPepco().map((r) => r.views));
+    const maxViews = Math.max(...biClientReports().map((r) => r.views));
     const count = el("bi-count");
     if (count) {
       const v = list.reduce((a, r) => a + r.views, 0);
-      count.textContent = `${list.length} of ${biPepco().length} reports · ${fmtN(v)} views (${Math.round((v / MOOV.bi.meta.totalViews) * 100)}% of all)`;
+      count.textContent = `${list.length} of ${biClientReports().length} reports · ${fmtN(v)} views (${Math.round((v / MOOV.bi.meta.totalViews) * 100)}% of all)`;
     }
     tbody.innerHTML = list.length
       ? list.map((r) => biRow(r, maxViews)).join("")
@@ -1562,14 +1564,22 @@
     { re: /(emission|co2|carbon|green|sustainab)/, boost: { "emission": 8 } },
     { re: /(who (uses|has access)|access|login)/, boost: { "report user": 6, "supplier user": 4 } },
   ];
-  const BI_ASK_EXAMPLES = [
-    "Why is my container stuck at the port?",
-    "Where do I check today's carrier bookings?",
-    "How late are my deliveries?",
-    "Long term volume forecast",
-    "Freight invoice costs",
-    "Lidl Foods supplier performance",
-  ];
+  const BI_ASK_EXAMPLES = {
+    PEPCO: [
+      "Why is my container stuck at the port?",
+      "Where do I check today's carrier bookings?",
+      "How late are my deliveries?",
+      "Long term volume forecast",
+      "Freight invoice costs",
+    ],
+    Lidl: [
+      "Lidl Foods supplier performance",
+      "Weekly closing review",
+      "Carrier schedule reliability",
+      "Container loading plan",
+      "Pending TELEX releases",
+    ],
+  };
   function biTokens(str) {
     return str.toLowerCase().replace(/[^a-z0-9 ]/g, " ").split(" ").filter((w) => w.length > 1 && !BI_STOP.has(w));
   }
@@ -1610,7 +1620,7 @@
   }
   function biAnswer(qRaw) {
     const terms = biExpand(biTokens(qRaw));
-    return MOOV.bi.reports.map((r) => ({ r, s: biScoreReport(r, terms, qRaw.toLowerCase()) }))
+    return biClientReports().map((r) => ({ r, s: biScoreReport(r, terms, qRaw.toLowerCase()) }))
       .filter((x) => x.s > 1.3) // must have a real term hit beyond the usage nudge
       .sort((a, b) => b.s - a.s)
       .slice(0, 3);
@@ -1626,7 +1636,7 @@
         ${r.views >= 300 ? '<span class="bi-star">popular</span>' : ''}${retireBadge(r)}
       </div>
       ${r.desc ? `<p class="bi-fcard-uw">${r.desc}</p>` : ''}
-      ${r.useWhen ? `<p class="bi-fcard-uw" style="margin-top:4px"><b>Use when</b> ${r.useWhen.replace(/^Use this when\s*/i, "")}</p>` : ''}
+      ${r.useWhen ? `<p class="bi-fcard-uw" style="margin-top:4px"><b>Use when</b> ${cleanUseWhen(r.useWhen)}</p>` : ''}
       ${r.clickPath ? `<div class="bi-fcard-path">In smartMOOV: <b>${r.clickPath}</b></div>` : ''}
       <div class="bi-fcard-actions" style="margin-top:2px">
         <a class="btn btn-primary btn-sm" href="${m.smartmoovUrl}" target="_blank" rel="noopener">Open in smartMOOV ↗</a>
@@ -1646,9 +1656,9 @@
   }
   function biAskHtml() {
     const m = MOOV.bi.meta;
-    const chips = BI_ASK_EXAMPLES.map((q) => `<button class="chip-btn bi-ask-chip">${q}</button>`).join("");
+    const chips = (BI_ASK_EXAMPLES[biState.client] || []).map((q) => `<button class="chip-btn bi-ask-chip">${q}</button>`).join("");
     return `
-      <div class="bi-note info">${I('info','i-sm')} <span>This assistant matches your question against <b>${m.cataloguedCount} PEPCO + ${m.lidlCount} Lidl reports</b> using their names, topics and keywords. It runs entirely in this page — no internet, no login, nothing leaves your browser. smartMOOV has no per-report links, so every answer gives you the exact click-path.</span></div>
+      <div class="bi-note info">${I('info','i-sm')} <span>Searching the <b>${biState.client}</b> workspace — matching your question against its <b>${biClientReports().length} reports</b> by name, topic and keyword. Runs entirely in this page — no internet, no login, nothing leaves your browser. smartMOOV has no per-report links, so every answer gives you the exact click-path. <i>Switch customer with the toggle above.</i></span></div>
       <div class="panel bi-ask-panel">
         <div class="bi-chat" id="bi-chat">
           <div class="bi-msg bot">
@@ -1667,7 +1677,7 @@
   /* -- Find a report: task-oriented search over the same data ---------- */
   function biFindMatch(r) {
     const q = biState.fq.trim().toLowerCase();
-    if (biState.fclient !== "all" && r.client !== biState.fclient) return false;
+    if (r.client !== biState.client) return false;
     if (biState.fcat !== "all" && r.category !== biState.fcat) return false;
     if (!q) return true;
     const hay = ((r.keywords || "") + " " + r.name + " " + (r.useWhen || "") + " " + (r.desc || "") + " " + r.category).toLowerCase();
@@ -1687,9 +1697,9 @@
     </div>`;
   }
   function biFindResults() {
-    const cats = [...new Set([].concat(MOOV.bi.meta.categories, MOOV.bi.reports.map((r) => r.category)))];
+    const cats = [...new Set(biClientReports().map((r) => r.category))];
     const sections = cats.map((c) => {
-      const list = MOOV.bi.reports.filter((r) => r.category === c && biFindMatch(r)).sort((a, b) => (b.views || 0) - (a.views || 0));
+      const list = biClientReports().filter((r) => r.category === c && biFindMatch(r)).sort((a, b) => (b.views || 0) - (a.views || 0));
       if (!list.length) return "";
       return `<section class="bi-catsec">
         <div class="bi-cathead"><h3>${c}</h3><span class="bi-catcount">${list.length} report${list.length > 1 ? 's' : ''}</span></div>
@@ -1702,22 +1712,17 @@
     const wrap = el("bi-find-results");
     if (wrap) wrap.innerHTML = biFindResults();
     $$("#bi-find-chips .chip-btn").forEach((c) => c.classList.toggle("on", c.dataset.cat === biState.fcat));
-    $$("#bi-find-clients .chip-btn").forEach((c) => c.classList.toggle("on", c.dataset.client === biState.fclient));
   }
   function biFindHtml() {
-    const cats = [...new Set([].concat(MOOV.bi.meta.categories, MOOV.bi.reports.map((r) => r.category)))];
+    const cats = [...new Set(biClientReports().map((r) => r.category))];
     const chips = [`<button class="chip-btn ${biState.fcat === 'all' ? 'on' : ''}" data-cat="all">All</button>`]
       .concat(cats.map((c) =>
         `<button class="chip-btn ${biState.fcat === c ? 'on' : ''}" data-cat="${c}">${c}</button>`)).join("");
-    const clientChips = [`<button class="chip-btn ${biState.fclient === 'all' ? 'on' : ''}" data-client="all">All clients</button>`]
-      .concat(MOOV.bi.meta.clients.map((c) =>
-        `<button class="chip-btn ${biState.fclient === c ? 'on' : ''}" data-client="${c}">${c} <span class="bi-seg-n">${MOOV.bi.reports.filter((r) => r.client === c).length}</span></button>`)).join("");
     return `
       <div class="panel bi-find-panel">
-        <div class="searchbox bi-find-search">${I('search','i-sm')}<input id="bi-find-q" placeholder="What do you need? e.g. customs delay, container fill, late supplier, volume forecast…" value="${biState.fq.replace(/"/g,'&quot;')}"></div>
-        <p class="muted" style="font-size:12.5px;margin-top:9px">Searches names, topics &amp; keywords — not just titles. Every card shows the click-path and an Open in smartMOOV button.</p>
-        <div class="bi-find-chips" id="bi-find-clients">${clientChips}</div>
-        <div class="bi-find-chips" id="bi-find-chips" style="margin-top:8px">${chips}</div>
+        <div class="searchbox bi-find-search">${I('search','i-sm')}<input id="bi-find-q" placeholder="What do you need in the ${biState.client} workspace? e.g. carrier delay, volume forecast, weekly closing…" value="${biState.fq.replace(/"/g,'&quot;')}"></div>
+        <p class="muted" style="font-size:12.5px;margin-top:9px">Searching <b>${biState.client}</b>’s ${biClientReports().length} reports by name, topic &amp; keyword. Every card shows the click-path and an Open in smartMOOV button. <i>Switch customer with the toggle above.</i></p>
+        <div class="bi-find-chips" id="bi-find-chips">${chips}</div>
       </div>
       <div id="bi-find-results">${biFindResults()}</div>`;
   }
@@ -1736,11 +1741,11 @@
       </button>`;
     }).join("");
 
-    const retireN = biPepco().filter((r) => r.retirement && r.retirement !== "no").length;
-    const datasetN = biPepco().filter((r) => MOOV.bi.isBigDataset(r)).length;
+    const retireN = biClientReports().filter((r) => r.retirement && r.retirement !== "no").length;
+    const datasetN = biClientReports().filter((r) => MOOV.bi.isBigDataset(r)).length;
     const catOpts = [`<option value="all" ${biState.cat==='all'?'selected':''}>All categories</option>`]
-      .concat(m.categories.map((c) => {
-        const n = biPepco().filter((r) => r.category === c).length;
+      .concat([...new Set(biClientReports().map((r) => r.category))].map((c) => {
+        const n = biClientReports().filter((r) => r.category === c).length;
         return `<option value="${c}" ${biState.cat===c?'selected':''}>${c} (${n})</option>`;
       })).join("");
     const typeSeg = [`<button class="${biState.type==='all'?'on':''}" data-type="all">All types</button>`]
@@ -1757,17 +1762,26 @@
     const head = biState.view === "ask"
       ? `<div class="page-head">
           <h1>smartMOOV BI — Ask</h1>
-          <p>Describe what you're trying to do, in plain English. It points you to the right report in the <b>PEPCO</b> and <b>Lidl</b> workspaces — with the click-path to reach it.</p>
+          <p>Describe what you're trying to do, in plain English. It points you to the right report in the <b>${biState.client}</b> workspace — with the click-path to reach it.</p>
         </div>`
       : biState.view === "find"
       ? `<div class="page-head">
           <h1>smartMOOV BI Catalogue — report finder</h1>
-          <p>Got a question? Search what you're trying to do and it points you to the right report in the <b>PEPCO</b> and <b>Lidl</b> workspaces — with the click-path to reach it.</p>
+          <p>Got a question? Search what you're trying to do and it points you to the right report in the <b>${biState.client}</b> workspace — with the click-path to reach it.</p>
         </div>`
       : `<div class="page-head">
           <h1>smartMOOV BI Catalogue — usage inventory</h1>
-          <p>Every report in the <b>${m.client}</b> Power BI workspace ranked by <b>actual views</b> (${m.usageWindow}). Built to answer: ${m.purposeQuestions.map((q)=>`<i>${q}</i>`).join(" · ")}</p>
+          <p>Every report in the <b>${biState.client}</b> Power BI workspace ranked by <b>actual views</b> (${m.usageWindow}). Built to answer: ${m.purposeQuestions.map((q)=>`<i>${q}</i>`).join(" · ")}</p>
         </div>`;
+
+    const clientBar = `<div class="bi-clientbar">
+      <span class="bi-clientbar-lbl">${I('building','i-sm')} Customer</span>
+      <div class="bi-switch ${biState.client === 'Lidl' ? 'is-lidl' : ''}" id="bi-switch">
+        ${m.clients.map((c) => `<button class="bi-switch-opt ${biState.client === c ? 'on' : ''}" data-client="${c}">${c} <span class="bi-switch-n">${MOOV.bi.reports.filter((r) => r.client === c).length}</span></button>`).join("")}
+        <span class="bi-switch-thumb"></span>
+      </div>
+      <span class="bi-clientbar-hint muted">Everything below is scoped to this customer.</span>
+    </div>`;
 
     const usageBody = `
       <div class="kpis">
@@ -1778,7 +1792,6 @@
       </div>
 
       <div class="bi-note info" style="margin-top:16px">${I('info','i-sm')} <span><b>The story:</b> usage is extremely concentrated — the ${m.usageTiers.workhorse.count} workhorses take ${Math.round((m.usageTiers.workhorse.views / m.totalViews) * 100)}% of all views, while ${m.usageTiers["near-zero"].count} reports sit under 20 views. A small set of workhorse reports, a very long tail of barely-touched ones, and only ${m.viewers.length} humans using any of it.</span></div>
-      <div class="bi-note" style="margin-top:10px">${I('layers','i-sm')} Usage metrics cover the <b>PEPCO</b> workspace only. The ${m.lidlCount} Lidl reports appear in <b>Ask</b> and <b>Find a report</b> as a directory — pull their Usage Metrics Report to extend this view.</div>
 
       <div class="bi-buckets">${buckets}</div>
 
@@ -1825,7 +1838,23 @@
           ${Object.entries(m.glossary).map(([k, v]) => `<div class="bi-gl"><span class="bi-gl-k">${k}</span><span class="bi-gl-v">${v}</span></div>`).join("")}
         </div>
       </div>`;
-    const body = head + tabsBar + (biState.view === "ask" ? biAskHtml() : biState.view === "find" ? biFindHtml() : usageBody);
+    const verifiedN = biClientReports().filter((r) => r.descSource === "verified").length;
+    const lidlUsage = `
+      <div class="panel bi-empty-panel">
+        <div class="bi-empty2">
+          ${I('chart')}
+          <h3>No usage metrics for ${biState.client} yet</h3>
+          <p>The Usage &amp; cleanup view — views, retirement candidates, big-dataset detection — needs the Power BI <b>Usage Metrics Report</b>, which we've only pulled for PEPCO so far. ${biState.client}'s ${biClientReports().length} reports are fully browsable in <b>Ask</b> and <b>Find a report</b>.</p>
+          <div class="bi-empty2-actions">
+            <button class="btn btn-primary btn-sm" data-goview="find">${I('search','i-sm')} Browse ${biState.client} reports</button>
+            <button class="btn btn-ghost btn-sm" data-goview="ask">${I('chat','i-sm')} Ask a question</button>
+          </div>
+          <div class="bi-empty2-stat">${biClientReports().length} reports · ${verifiedN} verified from the live report · ${biClientReports().length - verifiedN} inferred from the name</div>
+        </div>
+      </div>`;
+
+    const usagePane = biClientHasUsage() ? usageBody : lidlUsage;
+    const body = clientBar + head + tabsBar + (biState.view === "ask" ? biAskHtml() : biState.view === "find" ? biFindHtml() : usagePane);
     return opsShell("reports", "BI Catalogue", `<a href="#/ops">Operations console</a>`, body);
   }
 
@@ -2096,11 +2125,21 @@
       sel && sel.addEventListener("change", () => { MOOV.session.expert = sel.value; render(); });
     }
 
-    // BI catalogue: tabs + per-view bindings
+    // BI catalogue: customer switcher + tabs + per-view bindings
     if (route.name === "opsReports") {
+      $$("#bi-switch .bi-switch-opt").forEach((b) => b.addEventListener("click", () => {
+        if (biState.client === b.dataset.client) return;
+        biState.client = b.dataset.client;
+        // reset per-client sub-filters so we never land on an empty filtered view
+        biState.fcat = "all"; biState.cat = "all"; biState.quick = "all"; biState.tier = "all"; biState.type = "all";
+        render();
+      }));
       $$(".bi-tab").forEach((b) => b.addEventListener("click", () => {
         if (biState.view === b.dataset.view) return;
         biState.view = b.dataset.view; render();
+      }));
+      $$("[data-goview]").forEach((b) => b.addEventListener("click", () => {
+        biState.view = b.dataset.goview; render();
       }));
     }
 
@@ -2133,12 +2172,6 @@
         const b = e.target.closest(".chip-btn");
         if (!b) return;
         biState.fcat = b.dataset.cat; renderBiFind();
-      });
-      const clientChips = el("bi-find-clients");
-      if (clientChips) clientChips.addEventListener("click", (e) => {
-        const b = e.target.closest(".chip-btn");
-        if (!b) return;
-        biState.fclient = b.dataset.client; renderBiFind();
       });
     }
 
