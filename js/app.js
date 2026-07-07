@@ -1366,172 +1366,255 @@
 
   /* =====================================================================
      VIEW: BI CATALOGUE
-     A browsable catalogue of PEPCO's Power BI reports in the smartMOOV
-     hub — searchable, filterable by category & tier, collapsible per card.
+     Usage-ranked inventory of the PEPCO Power BI workspace — what's
+     actually used, what's an Excel extract in disguise, and what can be
+     retired. Data: js/reports-data.js (from the Usage Metrics Report).
      ===================================================================== */
-  const CAT_ICON = {
-    Forecast: "trend", General: "users", Booking: "calendar", Supplier: "building",
-    Carrier: "ship", ASN: "doc", Operations: "hub",
-  };
-  /* live filter state — survives grid re-renders within the catalogue */
-  const biState = { q: "", cat: "all", tier: "all", sort: "tier" };
+  const biState = { q: "", cat: "all", tier: "all", type: "all", quick: "all", sortKey: "views", sortDir: -1 };
+  const BI_TIERS = ["workhorse", "regular", "low", "near-zero"];
 
+  const trendNum = (t) => parseFloat(String(t).replace("−", "-")) || 0;
+  const fmtN = (n) => n.toLocaleString("en-GB");
+
+  function usageTierBadge(tier) {
+    const t = MOOV.bi.meta.usageTiers[tier];
+    return `<span class="bi-tier ${tier.replace("near-zero","nearzero")}" title="${t.range} — ${t.blurb}"><span class="bi-tier-dot"></span>${t.label}</span>`;
+  }
+  function typeBadge(type) {
+    return `<span class="bi-type ${type.toLowerCase()}" title="${MOOV.bi.meta.deliveryTypes[type]}">${type}</span>`;
+  }
   function calcBadge(basis) {
     if (basis === "documented") return `<span class="bi-badge doc" title="Calculation shown on the report's own Notes / KPI Definitions page">${I('check','i-sm')} Documented</span>`;
     if (basis === "inferred") return `<span class="bi-badge inf" title="Calculation inferred from labels — DAX not extractable">${I('info','i-sm')} Inferred</span>`;
     return `<span class="bi-badge na" title="No calculated measures — raw extract or directory">Raw / n·a</span>`;
   }
-  function tierBadge(tier) {
-    const t = MOOV.bi.meta.tiers[tier];
-    return `<span class="bi-tier t${tier}" title="${t.label}: ${t.blurb}"><span class="bi-tier-dot"></span>Tier ${tier}</span>`;
+  function trendCell(t) {
+    const n = trendNum(t);
+    const cls = n > 0 ? "up" : n < 0 ? "down" : "flat";
+    return `<span class="bi-trend ${cls}">${t}</span>`;
   }
-  function catBadge(cat) {
-    return `<span class="bi-cat" data-cat="${cat}">${I(CAT_ICON[cat] || 'grid','i-sm')} ${cat}</span>`;
+  function retireBadge(r) {
+    if (r.retirement === "yes") return `<span class="bi-flag retire" title="Near-zero usage — retire or convert to a plain data export">Retirement candidate</span>`;
+    if (r.retirement === "review") return `<span class="bi-flag review" title="Low usage but may still serve as a data feed — review">Review</span>`;
+    return "";
   }
 
-  /* the inner detail — shared by the collapsible card and the detail page */
+  /* the expanded detail — shared by the table rows and the detail page */
   function reportDetailBody(r) {
+    const m = MOOV.bi.meta;
     const chips = (arr) => arr.map((x) => `<span class="bi-chip">${x}</span>`).join("");
     const section = (label, html) => html ? `<div class="bi-sec"><div class="bi-sec-k">${label}</div><div class="bi-sec-v">${html}</div></div>` : "";
     const list = (arr) => `<ul class="bi-list">${arr.map((x) => `<li>${x}</li>`).join("")}</ul>`;
 
-    const variant = r.variantOf ? (() => {
-      const base = MOOV.bi.reportById(r.variantOf);
-      return `<div class="bi-note info">${I('info','i-sm')} Client-styled “- Pepco” layout of <a class="link" href="#/ops/reports/${r.variantOf}">${base ? base.name : r.variantOf}</a> — same underlying dataset, alternate styling.</div>`;
-    })() : "";
+    const usage = `
+      <div class="bi-usage-facts">
+        <div><span class="k">Views</span><span class="v tabular">${fmtN(r.views)}</span><span class="s">${r.viewsPct} of workspace · rank #${r.rank}</span></div>
+        <div><span class="k">Trend</span><span class="v">${trendCell(r.viewTrend)}</span><span class="s">vs previous window</span></div>
+        <div><span class="k">Users</span><span class="v tabular">${r.users} of 4</span><span class="s">distinct viewers</span></div>
+        <div><span class="k">Active days</span><span class="v tabular">${r.activeDays}</span><span class="s">of ~30 in window</span></div>
+      </div>`;
+
+    const typeNote = `<div class="bi-note ${r.deliveryType === 'Extract' ? '' : 'info'}">${I(r.deliveryType === 'Extract' ? 'doc' : 'info','i-sm')} <span>${typeBadge(r.deliveryType)} — ${m.deliveryTypes[r.deliveryType]}${r.hasRawDataPage ? ' <b>Has a Raw Data page</b> — this dataset can be pulled directly.' : ''}</span></div>`;
+
+    const retireNote = r.retirement !== "no"
+      ? `<div class="bi-note warn">${I('warn','i-sm')} ${r.retirement === 'review'
+          ? "Flagged for review — near-zero views but may still serve as a data feed."
+          : "Retirement candidate — near-zero usage. Retire it, or convert it to a plain data export."}</div>`
+      : "";
 
     const warn = r.warning ? `<div class="bi-note warn">${I('warn','i-sm')} ${r.warning}</div>` : "";
 
-    const structural = r.detailLevel === "structural"
-      ? `<div class="bi-note">${I('layers','i-sm')} Structural capture only — page-level metric detail pending owner confirmation.</div>`
+    const depth = r.usageTier === "near-zero"
+      ? `<div class="bi-note">${I('layers','i-sm')} Near-zero usage — metric detail deliberately not reverse-engineered; this entry carries usage and classification only.</div>`
+      : (r.detailLevel === "structural"
+        ? `<div class="bi-note">${I('layers','i-sm')} Structural capture only — page-level metric detail pending owner confirmation.</div>`
+        : "");
+
+    const calc = r.usageTier !== "near-zero"
+      ? section("Calculation", `${calcBadge(r.calcBasis)}${r.calcDetail ? `<div class="bi-calc">${r.calcDetail}</div>` : ""}`)
       : "";
 
-    const calc = section("Calculation",
-      `${calcBadge(r.calcBasis)}${r.calcDetail ? `<div class="bi-calc">${r.calcDetail}</div>` : ""}`);
-
     return `
-      <p class="bi-purpose">${r.purpose}</p>
-      ${warn}${variant}${structural}
+      ${r.purpose ? `<p class="bi-purpose">${r.purpose}</p>` : ""}
+      ${usage}
+      ${warn}${retireNote}${typeNote}${depth}
       <div class="bi-grid-sec">
         ${section("Pages", r.pages && r.pages.length ? chips(r.pages) : "")}
         ${section("Key metrics", r.metrics && r.metrics.length ? list(r.metrics) : "")}
         ${section("Visuals", r.visuals && r.visuals.length ? list(r.visuals) : "")}
         ${section("Table columns", r.tableColumns && r.tableColumns.length ? chips(r.tableColumns) : "")}
         ${section("Slicers / filters", r.slicers && r.slicers.length ? chips(r.slicers) : "")}
-        ${section("Granularity", r.granularity ? r.granularity : "")}
+        ${section("Granularity", r.granularity || "")}
         ${calc}
         ${section("Sample data", r.sampleData ? `<span class="bi-sample">${r.sampleData}</span>` : "")}
       </div>`;
   }
 
-  function reportCard(r) {
-    return `
-      <details class="bi-card" data-id="${r.id}">
-        <summary class="bi-card-head">
-          <div class="bi-card-title">
-            <div class="bi-name">${r.name}${r.variantOf ? `<span class="bi-variant">Pepco layout</span>` : ""}</div>
-            <div class="bi-badges">${catBadge(r.category)} ${tierBadge(r.tier)} ${calcBadge(r.calcBasis)}</div>
-          </div>
-          <span class="bi-caret">${I('chevron','i-sm')}</span>
-        </summary>
-        <div class="bi-card-body">
-          ${reportDetailBody(r)}
-          <div class="bi-card-foot"><a class="link" href="#/ops/reports/${r.id}">Open full page ${I('arrow','i-sm')}</a></div>
-        </div>
-      </details>`;
-  }
-
-  function biFilteredReports() {
+  function biFiltered() {
     const q = biState.q.trim().toLowerCase();
     let list = MOOV.bi.reports.filter((r) => {
+      if (biState.quick === "retire" && r.retirement === "no") return false;
+      if (biState.quick === "datasets" && !MOOV.bi.isBigDataset(r)) return false;
       if (biState.cat !== "all" && r.category !== biState.cat) return false;
-      if (biState.tier !== "all" && String(r.tier) !== biState.tier) return false;
+      if (biState.tier !== "all" && r.usageTier !== biState.tier) return false;
+      if (biState.type !== "all" && r.deliveryType !== biState.type) return false;
       if (q) {
-        const hay = [r.name, r.purpose, r.category, "tier " + r.tier, (r.metrics || []).join(" "), (r.pages || []).join(" ")]
-          .join(" ").toLowerCase();
+        const hay = [r.name, r.purpose || "", r.category, r.deliveryType, (r.metrics || []).join(" "), (r.pages || []).join(" ")].join(" ").toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
     });
-    const catOrder = MOOV.bi.meta.categories;
-    if (biState.sort === "alpha") list.sort((a, b) => a.name.localeCompare(b.name));
-    else if (biState.sort === "category") list.sort((a, b) =>
-      catOrder.indexOf(a.category) - catOrder.indexOf(b.category) || a.tier - b.tier || a.name.localeCompare(b.name));
-    else list.sort((a, b) => a.tier - b.tier || catOrder.indexOf(a.category) - catOrder.indexOf(b.category) || a.name.localeCompare(b.name));
+    const dir = biState.sortDir, key = biState.sortKey;
+    list.sort((a, b) => {
+      let d = 0;
+      if (key === "name") d = a.name.localeCompare(b.name);
+      else if (key === "trend") d = trendNum(a.viewTrend) - trendNum(b.viewTrend);
+      else d = (a[key] || 0) - (b[key] || 0);
+      return d * dir || a.rank - b.rank;
+    });
     return list;
   }
 
-  function renderBiGrid() {
-    const wrap = el("bi-grid");
-    if (!wrap) return;
-    const list = biFilteredReports();
+  function biRow(r, maxViews) {
+    const pct = Math.max(1.2, (r.views / maxViews) * 100);
+    return `
+      <tr class="bi-row" data-id="${r.id}">
+        <td class="tabular bi-rank">${r.rank}</td>
+        <td class="bi-name-cell">
+          <div class="bi-name">${r.name}</div>
+          <div class="bi-row-tags"><span class="bi-chip">${r.category}</span>${r.hasRawDataPage ? '<span class="bi-flag raw" title="Has a downloadable Raw Data page">raw data</span>' : ''}${retireBadge(r)}</div>
+        </td>
+        <td class="bi-views-cell"><div class="bi-views tabular">${fmtN(r.views)}</div><div class="bi-bar"><i style="width:${pct.toFixed(1)}%"></i></div></td>
+        <td>${trendCell(r.viewTrend)}</td>
+        <td class="tabular bi-users">${r.users}</td>
+        <td>${usageTierBadge(r.usageTier)}</td>
+        <td>${typeBadge(r.deliveryType)}</td>
+        <td class="bi-exp">${I('chevron','i-sm')}</td>
+      </tr>
+      <tr class="bi-detail-row hide" data-for="${r.id}"><td colspan="8"><div class="bi-detail-inner">${reportDetailBody(r)}
+        <div class="bi-card-foot"><a class="link" href="#/ops/reports/${r.id}">Open full page ${I('arrow','i-sm')}</a></div>
+      </div></td></tr>`;
+  }
+
+  function renderBiTable() {
+    const tbody = el("bi-tbody");
+    if (!tbody) return;
+    const list = biFiltered();
+    const maxViews = Math.max(...MOOV.bi.reports.map((r) => r.views));
     const count = el("bi-count");
-    if (count) count.textContent = list.length + " of " + MOOV.bi.reports.length + " reports";
-    wrap.innerHTML = list.length
-      ? list.map((r) => reportCard(r)).join("")
-      : `<div class="bi-empty">${I('search')} <b>No reports match.</b><p>Try clearing the search or a filter.</p></div>`;
+    if (count) {
+      const v = list.reduce((a, r) => a + r.views, 0);
+      count.textContent = `${list.length} of ${MOOV.bi.reports.length} reports · ${fmtN(v)} views (${Math.round((v / MOOV.bi.meta.totalViews) * 100)}% of all)`;
+    }
+    tbody.innerHTML = list.length
+      ? list.map((r) => biRow(r, maxViews)).join("")
+      : `<tr><td colspan="8" class="bi-empty">${I('search')} <b>No reports match.</b><p>Try clearing the search or a filter.</p></td></tr>`;
+    // sort indicators
+    $$("#bi-table th.sortable").forEach((th) => {
+      th.classList.toggle("on", th.dataset.key === biState.sortKey);
+      const c = th.querySelector(".dir");
+      if (c) c.textContent = th.dataset.key === biState.sortKey ? (biState.sortDir < 0 ? "↓" : "↑") : "";
+    });
+    // expandable rows
+    $$("#bi-tbody tr.bi-row").forEach((tr) => tr.addEventListener("click", (e) => {
+      if (e.target.closest("a")) return;
+      const det = $(`tr.bi-detail-row[data-for="${tr.dataset.id}"]`);
+      if (det) { det.classList.toggle("hide"); tr.classList.toggle("open"); }
+    }));
+  }
+
+  function biSyncControls() {
+    $$("#bi-quick button").forEach((b) => b.classList.toggle("on", b.dataset.quick === biState.quick));
+    $$(".bi-bucket").forEach((b) => b.classList.toggle("on", b.dataset.tier === biState.tier));
+    $$("#bi-type-seg button").forEach((b) => b.classList.toggle("on", b.dataset.type === biState.type));
   }
 
   function viewReports() {
     const m = MOOV.bi.meta;
-    const tierLegend = [1, 2, 3].map((t) => {
-      const info = m.tiers[t];
-      return `<div class="bi-legend-item">
-        ${tierBadge(t)}
-        <div><b>${info.label}</b> <span class="muted">· ${MOOV.bi.countByTier(t)} reports</span><div class="muted" style="font-size:12.5px;margin-top:2px">${info.blurb}</div></div>
-      </div>`;
+    const buckets = BI_TIERS.map((t) => {
+      const info = m.usageTiers[t];
+      const pctViews = Math.round((info.views / m.totalViews) * 100);
+      return `<button class="bi-bucket ${biState.tier===t?'on':''}" data-tier="${t}" title="Click to filter the table to this tier">
+        ${usageTierBadge(t)}
+        <div class="bb-count">${info.count} <span>reports</span></div>
+        <div class="bb-views tabular">${fmtN(info.views)} views · ${pctViews}%</div>
+        <div class="bb-blurb">${info.blurb}</div>
+        <div class="bb-range">${info.range}</div>
+      </button>`;
     }).join("");
 
-    const catSeg = [`<button class="${biState.cat==='all'?'on':''}" data-cat="all">All</button>`]
-      .concat(m.categories.map((c) => `<button class="${biState.cat===c?'on':''}" data-cat="${c}">${c} <span class="bi-seg-n">${MOOV.bi.countByCategory(c)}</span></button>`))
-      .join("");
-    const tierSeg = [`<button class="${biState.tier==='all'?'on':''}" data-tier="all">All tiers</button>`]
-      .concat([1, 2, 3].map((t) => `<button class="${biState.tier===String(t)?'on':''}" data-tier="${t}">Tier ${t}</button>`))
-      .join("");
+    const retireN = MOOV.bi.reports.filter((r) => r.retirement !== "no").length;
+    const datasetN = MOOV.bi.reports.filter((r) => MOOV.bi.isBigDataset(r)).length;
+    const catOpts = [`<option value="all" ${biState.cat==='all'?'selected':''}>All categories</option>`]
+      .concat(m.categories.map((c) => {
+        const n = MOOV.bi.reports.filter((r) => r.category === c).length;
+        return `<option value="${c}" ${biState.cat===c?'selected':''}>${c} (${n})</option>`;
+      })).join("");
+    const typeSeg = [`<button class="${biState.type==='all'?'on':''}" data-type="all">All types</button>`]
+      .concat(["Dashboard", "Extract", "Hybrid"].map((t) =>
+        `<button class="${biState.type===t?'on':''}" data-type="${t}">${t}</button>`)).join("");
+
+    const th = (key, label, cls) => `<th class="sortable ${cls||''}" data-key="${key}">${label} <span class="dir"></span></th>`;
 
     const body = `
       <div class="page-head">
-        <h1>smartMOOV BI Catalogue</h1>
-        <p>Every Power BI report MOOV delivers to <b>${m.client}</b> in the smartMOOV hub — ${MOOV.bi.reports.length} reports across ${m.categories.length} categories. Search, filter and expand any card for its metrics and calculation basis.</p>
+        <h1>smartMOOV BI Catalogue — usage inventory</h1>
+        <p>Every report in the <b>${m.client}</b> Power BI workspace ranked by <b>actual views</b> (${m.usageWindow}). Built to answer: ${m.purposeQuestions.map((q)=>`<i>${q}</i>`).join(" · ")}</p>
       </div>
 
-      <div class="bi-context">
-        <div class="bi-ctx-cards">
-          <div class="bi-ctx"><div class="bi-ctx-k">${I('hub','i-sm')} System</div><div class="bi-ctx-v">${m.system}</div></div>
-          <div class="bi-ctx"><div class="bi-ctx-k">${I('clock','i-sm')} Refresh</div><div class="bi-ctx-v">${m.refreshCadence}</div></div>
-          <div class="bi-ctx"><div class="bi-ctx-k">${I('box','i-sm')} Data scope</div><div class="bi-ctx-v">${m.dataScope}</div></div>
-        </div>
-        <div class="bi-note info" style="margin-top:14px">${I('info','i-sm')} ${m.calcNote} Each card is tagged <b>Documented</b> or <b>Inferred</b> accordingly. ${m.pepcoVariantNote}</div>
-        <div class="bi-legend">${tierLegend}</div>
+      <div class="kpis">
+        <div class="kpi"><div class="k-top"><div><div class="k-val tabular">${m.workspaceReportCount}</div><div class="k-lbl">Active reports</div></div><div class="k-icn blue">${I('chart')}</div></div><div class="k-delta flat">${m.cataloguedCount} legible in the usage report</div></div>
+        <div class="kpi"><div class="k-top"><div><div class="k-val tabular">${fmtN(m.totalViews)}</div><div class="k-lbl">Total views</div></div><div class="k-icn teal">${I('trend')}</div></div><div class="k-delta down">${m.viewTrend} view trend</div></div>
+        <div class="kpi"><div class="k-top"><div><div class="k-val tabular">${m.viewers.length}</div><div class="k-lbl">Total viewers</div></div><div class="k-icn amber">${I('users')}</div></div><div class="k-delta flat" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%" title="${m.viewers.join(', ')}">${m.viewers.join(" · ")}</div></div>
+        <div class="kpi"><div class="k-top"><div><div class="k-val tabular">${m.typicalOpenTime}</div><div class="k-lbl">Typical report open</div></div><div class="k-icn rose">${I('clock')}</div></div><div class="k-delta down">${retireN} retirement candidates</div></div>
       </div>
+
+      <div class="bi-note info" style="margin-top:16px">${I('info','i-sm')} <span><b>The story:</b> usage is extremely concentrated — the ${m.usageTiers.workhorse.count} workhorses take ${Math.round((m.usageTiers.workhorse.views / m.totalViews) * 100)}% of all views, while ${m.usageTiers["near-zero"].count} reports sit under 20 views. A small set of workhorse reports, a very long tail of barely-touched ones, and only ${m.viewers.length} humans using any of it.</span></div>
+
+      <div class="bi-buckets">${buckets}</div>
 
       <div class="table-wrap" style="margin-top:18px">
-        <div class="table-toolbar" style="gap:12px">
-          <div class="searchbox" style="min-width:220px">${I('search','i-sm')}<input id="bi-search" placeholder="Search reports, metrics, pages…" value="${biState.q.replace(/"/g,'&quot;')}"></div>
-          <div class="seg" id="bi-tier-seg">${tierSeg}</div>
+        <div class="table-toolbar" style="gap:10px">
+          <div class="seg" id="bi-quick">
+            <button class="${biState.quick==='all'?'on':''}" data-quick="all">All reports</button>
+            <button class="${biState.quick==='retire'?'on':''}" data-quick="retire">${I('alert','i-sm')} Retirement candidates <span class="bi-seg-n">${retireN}</span></button>
+            <button class="${biState.quick==='datasets'?'on':''}" data-quick="datasets">${I('layers','i-sm')} Big datasets / extracts <span class="bi-seg-n">${datasetN}</span></button>
+          </div>
           <div class="spacer" style="flex:1"></div>
-          <label class="bi-sort">${I('sort','i-sm')}<select class="select" id="bi-sort">
-            <option value="tier" ${biState.sort==='tier'?'selected':''}>Sort: Tier</option>
-            <option value="category" ${biState.sort==='category'?'selected':''}>Sort: Category</option>
-            <option value="alpha" ${biState.sort==='alpha'?'selected':''}>Sort: A–Z</option>
-          </select></label>
+          <span id="bi-count" class="muted" style="font-size:13px"></span>
         </div>
-        <div class="bi-cat-seg-wrap"><div class="seg bi-cat-seg" id="bi-cat-seg">${catSeg}</div></div>
+        <div class="table-toolbar" style="gap:10px;border-top:none;padding-top:0">
+          <div class="searchbox" style="min-width:220px">${I('search','i-sm')}<input id="bi-search" placeholder="Search reports, metrics, pages…" value="${biState.q.replace(/"/g,'&quot;')}"></div>
+          <select class="select" id="bi-cat" style="width:auto;padding:9px 13px">${catOpts}</select>
+          <div class="seg" id="bi-type-seg">${typeSeg}</div>
+        </div>
+        <div class="bi-table-scroll">
+        <table class="tbl" id="bi-table">
+          <thead><tr>
+            ${th('rank','#','bi-rank')}
+            ${th('name','Report')}
+            ${th('views','Views')}
+            ${th('trend','Trend')}
+            ${th('users','Users','bi-users')}
+            <th>Usage tier</th>
+            <th>Type</th>
+            <th></th>
+          </tr></thead>
+          <tbody id="bi-tbody"></tbody>
+        </table>
+        </div>
       </div>
 
-      <div class="bi-toolbar-meta"><span id="bi-count" class="muted"></span></div>
-      <div class="bi-grid" id="bi-grid"></div>
-
       <div class="panel" style="margin-top:22px">
-        <div class="p-head"><h3>${I('book','i-sm')} Shared glossary</h3><span class="muted" style="font-size:13px">Identical across all reports</span></div>
-        <div class="bi-glossary">
-          ${Object.entries(m.glossary).map(([k, v]) => `<div class="bi-gl"><span class="bi-gl-k">${k}</span><span class="bi-gl-v">${v}</span></div>`).join("")}
-        </div>
+        <div class="p-head"><h3>${I('warn','i-sm')} Caveats for the team</h3><span class="muted" style="font-size:13px">${m.usageSource} · ${m.usageWindow}</span></div>
+        <ul class="bi-list" style="font-size:13.5px">${m.caveats.map((c) => `<li>${c}</li>`).join("")}</ul>
       </div>
 
       <div class="panel" style="margin-top:18px">
-        <div class="p-head"><h3>${I('layers','i-sm')} Order status categories</h3><span class="muted" style="font-size:13px">${m.orderStatusCategories.length} states</span></div>
-        <div class="bi-status-list">${m.orderStatusCategories.map((s) => `<span class="bi-chip">${s}</span>`).join("")}</div>
+        <div class="p-head"><h3>${I('book','i-sm')} Shared glossary</h3><span class="muted" style="font-size:13px">Identical across all reports · refresh ${m.refreshCadence}</span></div>
+        <div class="bi-glossary">
+          ${Object.entries(m.glossary).map(([k, v]) => `<div class="bi-gl"><span class="bi-gl-k">${k}</span><span class="bi-gl-v">${v}</span></div>`).join("")}
+        </div>
       </div>`;
     return opsShell("reports", "BI Catalogue", `<a href="#/ops">Operations console</a>`, body);
   }
@@ -1547,7 +1630,7 @@
       <div class="detail-head" style="align-items:flex-start">
         <div class="dh-main">
           <h1>${r.name}</h1>
-          <div class="bi-badges" style="margin-top:12px">${catBadge(r.category)} ${tierBadge(r.tier)} ${calcBadge(r.calcBasis)}</div>
+          <div class="bi-badges" style="margin-top:12px"><span class="bi-chip">${r.category}</span> ${usageTierBadge(r.usageTier)} ${typeBadge(r.deliveryType)} ${r.usageTier !== 'near-zero' ? calcBadge(r.calcBasis) : ''} ${retireBadge(r)}</div>
         </div>
       </div>
       <div class="panel" style="margin-top:6px">${reportDetailBody(r)}</div>`;
@@ -1803,23 +1886,30 @@
       sel && sel.addEventListener("change", () => { MOOV.session.expert = sel.value; render(); });
     }
 
-    // BI catalogue: search, category/tier filters, sort
+    // BI catalogue: search, filters, quick views, buckets, sortable columns
     if (route.name === "opsReports") {
-      renderBiGrid();
+      renderBiTable();
       const search = el("bi-search");
-      if (search) search.addEventListener("input", () => { biState.q = search.value; renderBiGrid(); });
-      $$("#bi-cat-seg button").forEach((b) => b.addEventListener("click", () => {
-        biState.cat = b.dataset.cat;
-        $$("#bi-cat-seg button").forEach((x) => x.classList.toggle("on", x === b));
-        renderBiGrid();
+      if (search) search.addEventListener("input", () => { biState.q = search.value; renderBiTable(); });
+      const cat = el("bi-cat");
+      if (cat) cat.addEventListener("change", () => { biState.cat = cat.value; renderBiTable(); });
+      $$("#bi-type-seg button").forEach((b) => b.addEventListener("click", () => {
+        biState.type = b.dataset.type; biSyncControls(); renderBiTable();
       }));
-      $$("#bi-tier-seg button").forEach((b) => b.addEventListener("click", () => {
-        biState.tier = b.dataset.tier;
-        $$("#bi-tier-seg button").forEach((x) => x.classList.toggle("on", x === b));
-        renderBiGrid();
+      $$("#bi-quick button").forEach((b) => b.addEventListener("click", () => {
+        biState.quick = biState.quick === b.dataset.quick ? "all" : b.dataset.quick;
+        biSyncControls(); renderBiTable();
       }));
-      const sort = el("bi-sort");
-      if (sort) sort.addEventListener("change", () => { biState.sort = sort.value; renderBiGrid(); });
+      $$(".bi-bucket").forEach((b) => b.addEventListener("click", () => {
+        biState.tier = biState.tier === b.dataset.tier ? "all" : b.dataset.tier;
+        biSyncControls(); renderBiTable();
+      }));
+      $$("#bi-table th.sortable").forEach((th) => th.addEventListener("click", () => {
+        const key = th.dataset.key;
+        if (biState.sortKey === key) biState.sortDir *= -1;
+        else { biState.sortKey = key; biState.sortDir = key === "name" ? 1 : -1; }
+        renderBiTable();
+      }));
     }
 
     // ops shipments: client switcher

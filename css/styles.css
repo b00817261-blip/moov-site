@@ -827,21 +827,10 @@ a.kpi:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-
 .exp-card .ec-free { font-size: 12px; font-weight: 700; color: var(--success); margin-top: 10px; }
 .exp-card.sel .ec-free::after { content: " · selected"; color: var(--blue-500); }
 
-/* =====================================================================
-   BI CATALOGUE
-   ===================================================================== */
-/* context / legend header */
-.bi-context {
-  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 20px 22px;
-}
-.bi-ctx-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-.bi-ctx { background: var(--canvas); border: 1px solid var(--line-2); border-radius: var(--r-md); padding: 13px 15px; }
-.bi-ctx-k { font-size: 12px; font-weight: 700; color: var(--ink-3); display: flex; align-items: center; gap: 6px; letter-spacing: .02em; }
-.bi-ctx-k .i { width: 15px; height: 15px; }
-.bi-ctx-v { font-size: 13px; color: var(--ink-2); margin-top: 6px; line-height: 1.45; }
-.bi-legend { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 16px; }
-.bi-legend-item { display: flex; gap: 11px; align-items: flex-start; }
 
+/* =====================================================================
+   BI CATALOGUE — usage-ranked inventory
+   ===================================================================== */
 /* notes / callouts */
 .bi-note {
   display: flex; gap: 9px; align-items: flex-start; font-size: 13px; color: var(--ink-2);
@@ -868,81 +857,111 @@ a.kpi:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-
   font-size: 11.5px; font-weight: 700; white-space: nowrap;
 }
 .bi-tier-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
-.bi-tier.t1 { background: #eef4ff; color: var(--blue-500); }
-.bi-tier.t2 { background: var(--teal-050); color: #0e7c72; }
-.bi-tier.t3 { background: var(--canvas-2); color: var(--ink-3); }
-.bi-cat {
-  display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px;
-  font-size: 11.5px; font-weight: 700; background: var(--navy-800); color: #cfe0ff; white-space: nowrap;
+.bi-tier.workhorse { background: #eef4ff; color: var(--blue-500); }
+.bi-tier.regular { background: var(--teal-050); color: #0e7c72; }
+.bi-tier.low { background: var(--warning-bg); color: var(--warning); }
+.bi-tier.nearzero { background: var(--danger-bg); color: var(--danger); }
+.bi-type {
+  display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 6px;
+  font-size: 11px; font-weight: 700; letter-spacing: .03em; white-space: nowrap;
 }
-.bi-cat .i { width: 13px; height: 13px; }
-
-/* toolbar */
-.bi-cat-seg-wrap { padding: 0 18px 16px; overflow-x: auto; }
-.bi-cat-seg { flex-wrap: nowrap; }
-.bi-cat-seg button { white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
-.bi-seg-n { font-size: 11px; font-weight: 700; opacity: .6; }
-.bi-sort { display: inline-flex; align-items: center; gap: 8px; color: var(--ink-3); }
-.bi-sort .select { width: auto; padding: 9px 13px; }
-.bi-toolbar-meta { margin: 14px 2px 10px; font-size: 13px; }
-
-/* card grid */
-.bi-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; align-items: start; }
-.bi-card {
-  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden;
-  transition: border-color .15s, box-shadow .15s;
+.bi-type.dashboard { background: var(--navy-800); color: #cfe0ff; }
+.bi-type.extract { background: var(--warning-bg); color: #8a5a06; border: 1px solid #f0d9ab; }
+.bi-type.hybrid { background: #f3f0ff; color: #5b45d6; border: 1px solid #ddd3f7; }
+.bi-flag {
+  display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .02em; white-space: nowrap;
 }
-.bi-card[open] { border-color: var(--blue-400); box-shadow: var(--shadow-md); }
-.bi-card-head {
-  list-style: none; cursor: pointer; padding: 16px 18px; display: flex; align-items: flex-start; gap: 12px;
-}
-.bi-card-head::-webkit-details-marker { display: none; }
-.bi-card-head:hover { background: var(--canvas); }
-.bi-card-title { flex: 1; min-width: 0; }
-.bi-name { font-weight: 800; font-size: 15px; letter-spacing: -.01em; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.bi-variant {
-  font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
-  background: var(--canvas-2); color: var(--ink-3); border-radius: 5px; padding: 2px 6px;
-}
-.bi-badges { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 11px; }
-.bi-caret { flex: none; color: var(--ink-3); transition: transform .18s; margin-top: 2px; }
-.bi-card[open] .bi-caret { transform: rotate(90deg); }
-.bi-card-body { padding: 4px 18px 18px; border-top: 1px solid var(--line-2); }
-.bi-purpose { font-size: 14px; color: var(--ink-2); margin: 14px 0 4px; line-height: 1.5; }
-
-/* detail sections */
-.bi-grid-sec { display: flex; flex-direction: column; gap: 2px; margin-top: 8px; }
-.bi-sec { display: grid; grid-template-columns: 130px 1fr; gap: 14px; padding: 11px 0; border-top: 1px solid var(--line-2); }
-.bi-sec:first-child { border-top: none; }
-.bi-sec-k { font-size: 12px; font-weight: 700; color: var(--ink-3); letter-spacing: .02em; padding-top: 2px; }
-.bi-sec-v { font-size: 13.5px; color: var(--ink-2); min-width: 0; }
-.bi-list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
-.bi-list li { font-size: 13.5px; color: var(--ink-2); }
+.bi-flag.retire { background: var(--danger-bg); color: var(--danger); }
+.bi-flag.review { background: var(--warning-bg); color: var(--warning); }
+.bi-flag.raw { background: var(--canvas-2); color: var(--ink-3); }
 .bi-chip {
   display: inline-block; font-size: 12px; font-weight: 600; background: var(--canvas-2); color: var(--ink-2);
   border-radius: 6px; padding: 3px 9px; margin: 0 5px 5px 0;
 }
-.bi-calc { margin-top: 8px; font-size: 13px; color: var(--ink-2); line-height: 1.5; background: var(--canvas); border-left: 3px solid var(--line); border-radius: 0 6px 6px 0; padding: 9px 12px; }
-.bi-sample { font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
-.bi-card-foot { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line-2); }
+.bi-trend { font-weight: 700; font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bi-trend.up { color: var(--success); }
+.bi-trend.down { color: var(--danger); }
+.bi-trend.flat { color: var(--ink-3); }
+.bi-seg-n { font-size: 11px; font-weight: 700; opacity: .6; }
 
-.bi-empty { grid-column: 1 / -1; text-align: center; padding: 48px 20px; color: var(--ink-3); }
+/* usage tier buckets */
+.bi-buckets { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 16px; }
+.bi-bucket {
+  text-align: left; font-family: inherit; background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-lg); padding: 16px 18px; transition: border-color .15s, box-shadow .15s, transform .12s;
+}
+.bi-bucket:hover { border-color: var(--blue-400); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+.bi-bucket.on { border-color: var(--blue-500); box-shadow: 0 0 0 3px var(--blue-050); }
+.bi-bucket .bb-count { font-size: 26px; font-weight: 800; letter-spacing: -.02em; margin-top: 10px; }
+.bi-bucket .bb-count span { font-size: 13px; font-weight: 600; color: var(--ink-3); letter-spacing: 0; }
+.bi-bucket .bb-views { font-size: 13px; font-weight: 700; color: var(--ink-2); margin-top: 2px; }
+.bi-bucket .bb-blurb { font-size: 12px; color: var(--ink-3); margin-top: 8px; line-height: 1.45; }
+.bi-bucket .bb-range { font-size: 11px; font-weight: 700; color: var(--ink-3); margin-top: 8px; letter-spacing: .03em; text-transform: uppercase; }
+.bi-bucket.on .bb-range::after { content: " · filtering"; color: var(--blue-500); }
+
+/* the ranked table */
+.bi-table-scroll { overflow-x: auto; }
+#bi-table { min-width: 880px; }
+#bi-table th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
+#bi-table th.sortable:hover { color: var(--ink); }
+#bi-table th.sortable.on { color: var(--blue-500); }
+#bi-table th .dir { font-size: 11px; }
+.bi-rank { width: 44px; color: var(--ink-3); }
+.bi-users { width: 56px; }
+tr.bi-row { cursor: pointer; }
+tr.bi-row:hover td { background: var(--canvas); }
+tr.bi-row.open td { background: var(--blue-050); }
+tr.bi-row .bi-name { font-weight: 700; font-size: 14px; letter-spacing: -.01em; }
+.bi-row-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
+.bi-row-tags .bi-chip { margin: 0; font-size: 11px; padding: 2px 8px; }
+.bi-views-cell { min-width: 130px; }
+.bi-views { font-weight: 800; font-size: 14px; }
+.bi-bar { height: 5px; background: var(--canvas-2); border-radius: 99px; margin-top: 5px; overflow: hidden; max-width: 120px; }
+.bi-bar i { display: block; height: 100%; background: var(--blue-500); border-radius: 99px; }
+.bi-exp { text-align: right; color: var(--ink-3); width: 34px; }
+tr.bi-row.open .bi-exp .i { transform: rotate(90deg); }
+tr.bi-detail-row > td { background: var(--canvas); padding: 0 !important; }
+.bi-detail-inner { padding: 18px 22px 20px; border-top: 1px solid var(--line-2); }
+.bi-empty { text-align: center; padding: 48px 20px !important; color: var(--ink-3); }
 .bi-empty .i { width: 34px; height: 34px; color: var(--line); }
 .bi-empty b { display: block; margin-top: 10px; color: var(--ink-2); }
+.bi-empty p { margin-top: 4px; }
 
-/* glossary + status */
+/* expanded detail */
+.bi-purpose { font-size: 14px; color: var(--ink-2); margin: 0 0 14px; line-height: 1.5; }
+.bi-usage-facts {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 14px;
+}
+.bi-usage-facts > div { background: var(--surface); border: 1px solid var(--line-2); border-radius: var(--r-md); padding: 10px 13px; }
+.bi-usage-facts .k { display: block; font-size: 11px; font-weight: 700; color: var(--ink-3); letter-spacing: .03em; text-transform: uppercase; }
+.bi-usage-facts .v { display: block; font-size: 18px; font-weight: 800; margin-top: 3px; }
+.bi-usage-facts .s { display: block; font-size: 11.5px; color: var(--ink-3); margin-top: 2px; }
+.bi-grid-sec { display: flex; flex-direction: column; gap: 2px; margin-top: 12px; }
+.bi-sec { display: grid; grid-template-columns: 130px 1fr; gap: 14px; padding: 11px 0; border-top: 1px solid var(--line-2); }
+.bi-sec-k { font-size: 12px; font-weight: 700; color: var(--ink-3); letter-spacing: .02em; padding-top: 2px; }
+.bi-sec-v { font-size: 13.5px; color: var(--ink-2); min-width: 0; }
+.bi-list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+.bi-list li { font-size: 13.5px; color: var(--ink-2); }
+.bi-calc { margin-top: 8px; font-size: 13px; color: var(--ink-2); line-height: 1.5; background: var(--surface); border-left: 3px solid var(--line); border-radius: 0 6px 6px 0; padding: 9px 12px; }
+.bi-sample { font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+.bi-card-foot { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line-2); }
+.bi-badges { display: flex; flex-wrap: wrap; gap: 7px; }
+.bi-note + .bi-note, .bi-usage-facts + .bi-note, .bi-note + .bi-grid-sec { margin-top: 10px; }
+
+/* glossary */
 .bi-glossary { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 22px; }
 .bi-gl { display: flex; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--line-2); font-size: 13px; }
 .bi-gl-k { font-weight: 800; color: var(--ink); flex: none; min-width: 58px; font-variant-numeric: tabular-nums; }
 .bi-gl-v { color: var(--ink-2); }
-.bi-status-list { display: flex; flex-wrap: wrap; gap: 8px; }
-.bi-status-list .bi-chip { margin: 0; }
 
 @media (max-width: 960px) {
-  .bi-grid { grid-template-columns: 1fr; }
-  .bi-ctx-cards, .bi-legend, .bi-glossary { grid-template-columns: 1fr; }
+  .bi-buckets { grid-template-columns: 1fr 1fr; }
+  .bi-usage-facts { grid-template-columns: 1fr 1fr; }
+  .bi-glossary { grid-template-columns: 1fr; }
 }
 @media (max-width: 640px) {
+  .bi-buckets { grid-template-columns: 1fr; }
   .bi-sec { grid-template-columns: 1fr; gap: 4px; }
   .bi-sec-k { padding-top: 0; }
 }
