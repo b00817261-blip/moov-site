@@ -1370,7 +1370,7 @@
      actually used, what's an Excel extract in disguise, and what can be
      retired. Data: js/reports-data.js (from the Usage Metrics Report).
      ===================================================================== */
-  const biState = { q: "", cat: "all", tier: "all", type: "all", quick: "all", sortKey: "views", sortDir: -1 };
+  const biState = { view: "find", fq: "", fcat: "all", q: "", cat: "all", tier: "all", type: "all", quick: "all", sortKey: "views", sortDir: -1 };
   const BI_TIERS = ["workhorse", "regular", "low", "near-zero"];
 
   const trendNum = (t) => parseFloat(String(t).replace("−", "-")) || 0;
@@ -1439,6 +1439,8 @@
       ${usage}
       ${warn}${retireNote}${typeNote}${depth}
       <div class="bi-grid-sec">
+        ${section("Use this when", r.useWhen || "")}
+        ${section("Where in smartMOOV", r.clickPath ? `<span class="bi-path">${r.clickPath}</span><a class="link" href="${m.smartmoovUrl}" target="_blank" rel="noopener" style="margin-left:10px;white-space:nowrap">Open in smartMOOV ↗</a>` : "")}
         ${section("Pages", r.pages && r.pages.length ? chips(r.pages) : "")}
         ${section("Key metrics", r.metrics && r.metrics.length ? list(r.metrics) : "")}
         ${section("Visuals", r.visuals && r.visuals.length ? list(r.visuals) : "")}
@@ -1529,6 +1531,56 @@
     $$("#bi-type-seg button").forEach((b) => b.classList.toggle("on", b.dataset.type === biState.type));
   }
 
+  /* -- Find a report: task-oriented search over the same data ---------- */
+  function biFindMatch(r) {
+    const q = biState.fq.trim().toLowerCase();
+    if (biState.fcat !== "all" && r.category !== biState.fcat) return false;
+    if (!q) return true;
+    const hay = ((r.keywords || "") + " " + r.name + " " + (r.useWhen || "") + " " + r.category).toLowerCase();
+    return q.split(/\s+/).every((w) => hay.includes(w));
+  }
+  function biFindCard(r) {
+    const m = MOOV.bi.meta;
+    return `<div class="bi-fcard">
+      <div class="bi-fcard-top"><span class="bi-fcard-name">${r.name}</span>${r.usageTier === 'workhorse' ? '<span class="bi-star">most used</span>' : ''}${retireBadge(r)}</div>
+      ${r.useWhen ? `<p class="bi-fcard-uw">${r.useWhen}</p>` : ''}
+      ${r.clickPath ? `<div class="bi-fcard-path">In smartMOOV: <b>${r.clickPath}</b></div>` : ''}
+      <div class="bi-fcard-meta">${typeBadge(r.deliveryType)}<span class="bi-fcard-views tabular">${fmtN(r.views)} views</span></div>
+      <div class="bi-fcard-actions">
+        <a class="btn btn-primary btn-sm" href="${m.smartmoovUrl}" target="_blank" rel="noopener">Open in smartMOOV ↗</a>
+        <a class="link" href="#/ops/reports/${r.id}" style="font-size:13px">Details ${I('chevron','i-sm')}</a>
+      </div>
+    </div>`;
+  }
+  function biFindResults() {
+    const sections = MOOV.bi.meta.categories.map((c) => {
+      const list = MOOV.bi.reports.filter((r) => r.category === c && biFindMatch(r)).sort((a, b) => b.views - a.views);
+      if (!list.length) return "";
+      return `<section class="bi-catsec">
+        <div class="bi-cathead"><h3>${c}</h3><span class="bi-catcount">${list.length} report${list.length > 1 ? 's' : ''}</span></div>
+        <div class="bi-fcards">${list.map(biFindCard).join("")}</div>
+      </section>`;
+    }).join("");
+    return sections || `<div class="bi-empty" style="background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg)">${I('search')} <b>No reports match.</b><p>Try fewer words — every word has to match.</p></div>`;
+  }
+  function renderBiFind() {
+    const wrap = el("bi-find-results");
+    if (wrap) wrap.innerHTML = biFindResults();
+    $$("#bi-find-chips .chip-btn").forEach((c) => c.classList.toggle("on", c.dataset.cat === biState.fcat));
+  }
+  function biFindHtml() {
+    const chips = [`<button class="chip-btn ${biState.fcat === 'all' ? 'on' : ''}" data-cat="all">All</button>`]
+      .concat(MOOV.bi.meta.categories.map((c) =>
+        `<button class="chip-btn ${biState.fcat === c ? 'on' : ''}" data-cat="${c}">${c}</button>`)).join("");
+    return `
+      <div class="panel bi-find-panel">
+        <div class="searchbox bi-find-search">${I('search','i-sm')}<input id="bi-find-q" placeholder="What do you need? e.g. customs delay, container fill, late supplier, volume forecast…" value="${biState.fq.replace(/"/g,'&quot;')}"></div>
+        <p class="muted" style="font-size:12.5px;margin-top:9px">Searches names, topics &amp; keywords — not just titles. Every card shows the click-path and an Open in smartMOOV button.</p>
+        <div class="bi-find-chips" id="bi-find-chips">${chips}</div>
+      </div>
+      <div id="bi-find-results">${biFindResults()}</div>`;
+  }
+
   function viewReports() {
     const m = MOOV.bi.meta;
     const buckets = BI_TIERS.map((t) => {
@@ -1556,12 +1608,21 @@
 
     const th = (key, label, cls) => `<th class="sortable ${cls||''}" data-key="${key}">${label} <span class="dir"></span></th>`;
 
-    const body = `
-      <div class="page-head">
-        <h1>smartMOOV BI Catalogue — usage inventory</h1>
-        <p>Every report in the <b>${m.client}</b> Power BI workspace ranked by <b>actual views</b> (${m.usageWindow}). Built to answer: ${m.purposeQuestions.map((q)=>`<i>${q}</i>`).join(" · ")}</p>
-      </div>
+    const tabsBar = `<div class="bi-tabs">
+      <button class="bi-tab ${biState.view === 'find' ? 'on' : ''}" data-view="find">${I('search','i-sm')} Find a report</button>
+      <button class="bi-tab ${biState.view === 'usage' ? 'on' : ''}" data-view="usage">${I('chart','i-sm')} Usage &amp; cleanup</button>
+    </div>`;
+    const head = biState.view === "find"
+      ? `<div class="page-head">
+          <h1>smartMOOV BI Catalogue — report finder</h1>
+          <p>Got a question? Search what you're trying to do and it points you to the right report in the <b>${m.client}</b> workspace — with the click-path to reach it.</p>
+        </div>`
+      : `<div class="page-head">
+          <h1>smartMOOV BI Catalogue — usage inventory</h1>
+          <p>Every report in the <b>${m.client}</b> Power BI workspace ranked by <b>actual views</b> (${m.usageWindow}). Built to answer: ${m.purposeQuestions.map((q)=>`<i>${q}</i>`).join(" · ")}</p>
+        </div>`;
 
+    const usageBody = `
       <div class="kpis">
         <div class="kpi"><div class="k-top"><div><div class="k-val tabular">${m.workspaceReportCount}</div><div class="k-lbl">Active reports</div></div><div class="k-icn blue">${I('chart')}</div></div><div class="k-delta flat">${m.cataloguedCount} legible in the usage report</div></div>
         <div class="kpi"><div class="k-top"><div><div class="k-val tabular">${fmtN(m.totalViews)}</div><div class="k-lbl">Total views</div></div><div class="k-icn teal">${I('trend')}</div></div><div class="k-delta down">${m.viewTrend} view trend</div></div>
@@ -1616,6 +1677,7 @@
           ${Object.entries(m.glossary).map(([k, v]) => `<div class="bi-gl"><span class="bi-gl-k">${k}</span><span class="bi-gl-v">${v}</span></div>`).join("")}
         </div>
       </div>`;
+    const body = head + tabsBar + (biState.view === "find" ? biFindHtml() : usageBody);
     return opsShell("reports", "BI Catalogue", `<a href="#/ops">Operations console</a>`, body);
   }
 
@@ -1886,8 +1948,28 @@
       sel && sel.addEventListener("change", () => { MOOV.session.expert = sel.value; render(); });
     }
 
-    // BI catalogue: search, filters, quick views, buckets, sortable columns
+    // BI catalogue: tabs + per-view bindings
     if (route.name === "opsReports") {
+      $$(".bi-tab").forEach((b) => b.addEventListener("click", () => {
+        if (biState.view === b.dataset.view) return;
+        biState.view = b.dataset.view; render();
+      }));
+    }
+
+    // find-a-report tab: task search + category chips
+    if (route.name === "opsReports" && biState.view === "find") {
+      const fq = el("bi-find-q");
+      if (fq) fq.addEventListener("input", () => { biState.fq = fq.value; renderBiFind(); });
+      const chips = el("bi-find-chips");
+      if (chips) chips.addEventListener("click", (e) => {
+        const b = e.target.closest(".chip-btn");
+        if (!b) return;
+        biState.fcat = b.dataset.cat; renderBiFind();
+      });
+    }
+
+    // usage & cleanup tab: search, filters, quick views, buckets, sortable columns
+    if (route.name === "opsReports" && biState.view === "usage") {
       renderBiTable();
       const search = el("bi-search");
       if (search) search.addEventListener("input", () => { biState.q = search.value; renderBiTable(); });

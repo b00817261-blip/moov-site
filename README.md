@@ -112,13 +112,19 @@ A "Demo: switch view" link in each sidebar jumps between the two.
   file and to the expert's calendar cell, which shows the contact and
   headcount (e.g. "Ola Nowak +2").
 
-### 5. smartMOOV BI Catalogue — usage inventory (Ops console)
-- **BI Catalogue** (`#/ops/reports`) — a usage-ranked inventory of the
-  **PEPCO Power BI workspace**: 106 reports across 10 categories, ranked by
-  **actual views** from the Usage Metrics Report (6 Jun – 5 Jul 2026). Built
+### 5. smartMOOV BI Catalogue (Ops console)
+- **BI Catalogue** (`#/ops/reports`) — two windows over the same data:
+  a **"Find a report"** finder and a **"Usage & cleanup"** inventory of the
+  **PEPCO Power BI workspace** (106 reports across 10 categories, ranked by
+  **actual views** from the Usage Metrics Report, 6 Jun – 5 Jul 2026). Built
   to answer four questions: *what are we actually using, what's genuinely
   there for the client, what's just used as a data download, and where are
   the big datasets*.
+- **Find a report** — task-oriented search ("customs delay", "container
+  fill", "late supplier"…) over names, topics and keywords. Every card gives
+  a *"Use this when…"* sentence, the **click-path inside smartMOOV**
+  (BI › Reports › tab › report), delivery-type badge, view count, and an
+  **Open in smartMOOV** button; category chips filter the sections.
 - **Landing summary** — 108 active reports, 12,336 views, only 4 viewers,
   a −1.2% view trend, ~3 s typical open — plus "the story": usage is
   extremely concentrated (7 workhorses take ~60% of all views; 29 reports sit

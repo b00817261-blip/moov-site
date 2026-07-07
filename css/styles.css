@@ -965,3 +965,48 @@ tr.bi-detail-row > td { background: var(--canvas); padding: 0 !important; }
   .bi-sec { grid-template-columns: 1fr; gap: 4px; }
   .bi-sec-k { padding-top: 0; }
 }
+
+/* BI catalogue tabs + report finder */
+.bi-tabs { display: flex; gap: 8px; margin-bottom: 18px; border-bottom: 1px solid var(--line); }
+.bi-tab {
+  display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px;
+  border: none; background: none; font-size: 15px; font-weight: 700; color: var(--ink-3);
+  border-bottom: 3px solid transparent; margin-bottom: -1px; font-family: inherit;
+}
+.bi-tab:hover { color: var(--ink); }
+.bi-tab.on { color: var(--ink); border-bottom-color: var(--blue-500); }
+
+.bi-find-panel { padding: 20px 22px; }
+.bi-find-search { min-width: 0; width: 100%; padding: 13px 18px; }
+.bi-find-search input { font-size: 16px; }
+.bi-find-chips { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 12px; }
+.chip-btn {
+  padding: 6px 13px; border: 1px solid var(--line); border-radius: 999px;
+  background: var(--canvas); font-size: 12.5px; font-weight: 600; color: var(--ink-2); font-family: inherit;
+}
+.chip-btn:hover { border-color: var(--ink-3); }
+.chip-btn.on { background: var(--navy-800); color: #fff; border-color: var(--navy-800); }
+
+.bi-catsec { margin-top: 22px; }
+.bi-cathead { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.bi-cathead h3 { font-size: 17px; }
+.bi-catcount { font-size: 12px; font-weight: 600; color: var(--ink-3); background: var(--canvas-2); padding: 3px 10px; border-radius: 999px; }
+.bi-fcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 12px; }
+.bi-fcard {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg);
+  padding: 16px; display: flex; flex-direction: column; transition: box-shadow .15s, border-color .15s;
+}
+.bi-fcard:hover { border-color: var(--blue-400); box-shadow: var(--shadow-sm); }
+.bi-fcard-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.bi-fcard-name { font-weight: 800; font-size: 15px; letter-spacing: -.01em; }
+.bi-star { font-size: 10.5px; font-weight: 700; color: var(--success); background: var(--success-bg); padding: 2px 8px; border-radius: 999px; }
+.bi-fcard-uw { font-size: 13px; color: var(--ink-2); line-height: 1.5; margin: 8px 0 10px; }
+.bi-fcard-path, .bi-path {
+  font-size: 11.5px; color: var(--ink-3); background: var(--canvas); border: 1px solid var(--line-2);
+  border-radius: 8px; padding: 8px 10px; line-height: 1.5; margin-bottom: 10px;
+}
+.bi-path { display: inline-block; margin-bottom: 0; font-weight: 700; color: var(--ink-2); }
+.bi-fcard-path b { color: var(--ink); }
+.bi-fcard-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.bi-fcard-views { font-size: 11.5px; color: var(--ink-3); font-weight: 600; }
+.bi-fcard-actions { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
