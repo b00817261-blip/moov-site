@@ -123,9 +123,16 @@ A "Demo: switch view" link in each sidebar jumps between the two.
 - **Ask** — a chat-style assistant: type a plain-English question ("why is
   my container stuck at the port?") and it ranks the three best-matching
   reports using keyword + synonym + intent scoring (e.g. *stuck* → AHOD,
-  demurrage, detention). Fully client-side — nothing leaves the browser.
-  Answers show the description, when to use it, the click-path and an Open
-  in smartMOOV button.
+  demurrage, detention), with a whole-phrase bonus so typing a report's name
+  finds that report. Fully client-side — nothing leaves the browser. Answers
+  show the description, when to use it, the click-path and an Open in
+  smartMOOV button.
+- **Two clients** — the catalogue covers **PEPCO** (106 reports, full usage
+  metrics) and **Lidl** (23 reports incl. the LIDL FOOD family, directory
+  only — descriptions tagged *verified* from the live report's tabs or
+  *inferred* from the name). Ask and Find cover both, with client badges and
+  a client filter; Usage & cleanup stays PEPCO-scoped until Lidl's usage
+  report is pulled.
 - **Find a report** — task-oriented search ("customs delay", "container
   fill", "late supplier"…) over names, topics and keywords. Every card gives
   a *"Use this when…"* sentence, the **click-path inside smartMOOV**
